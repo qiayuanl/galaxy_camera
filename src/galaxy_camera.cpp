@@ -8,8 +8,8 @@ namespace galaxy_camera {
 
 GalaxyCamera::GalaxyCamera(image_transport::Publisher &pub,
                            uint32_t height, uint32_t width,
-                           uint32_t offset_x, uint32_t offset_y,
                            uint32_t step,
+                           uint32_t offset_x, uint32_t offset_y,
                            const std::string &encoding) {
   pub_ = pub;
   image.height = height;
@@ -46,7 +46,7 @@ GalaxyCamera::GalaxyCamera(image_transport::Publisher &pub,
   if (format == 0)
       static_assert(true, "Illegal format");
 
-  assert(GXSetEnum(dev_handle_, GX_ENUM_PIXEL_FORMAT, format) == GX_STATUS_SUCCESS);
+  //assert(GXSetEnum(dev_handle_, GX_ENUM_PIXEL_FORMAT, format) == GX_STATUS_SUCCESS);
   assert(GXSetInt(dev_handle_, GX_INT_WIDTH, width) == GX_STATUS_SUCCESS);
   assert(GXSetInt(dev_handle_, GX_INT_HEIGHT, height) == GX_STATUS_SUCCESS);
   assert(GXSetInt(dev_handle_, GX_INT_OFFSET_X, offset_x) == GX_STATUS_SUCCESS);
@@ -69,34 +69,6 @@ void GalaxyCamera::onFrameCB(GX_FRAME_CALLBACK_PARAM *pFrame) {
     memcpy((char *) (&image.data[0]), img, image.step * image.height);
     pub_.publish(image);
   }
-
-}
-
-bool GalaxyCamera::setAutoGain(bool i) {
-  GX_STATUS status;
-  if (i)
-    status = GXSetEnum(dev_handle_, GX_ENUM_GAIN_AUTO, GX_GAIN_AUTO_CONTINUOUS);
-  else
-    status = GXSetEnum(dev_handle_, GX_ENUM_GAIN_AUTO, GX_GAIN_AUTO_OFF);
-  return status == GX_STATUS_SUCCESS;
-}
-
-bool GalaxyCamera::setAutoBalance(bool i) {
-  GX_STATUS status;
-  if (i)
-    status = GXSetEnum(dev_handle_, GX_ENUM_GAIN_AUTO, GX_GAIN_AUTO_CONTINUOUS);
-  else
-    status = GXSetEnum(dev_handle_, GX_ENUM_GAIN_AUTO, GX_GAIN_AUTO_OFF);
-  return status == GX_STATUS_SUCCESS;
-}
-
-bool GalaxyCamera::setAutoExposure(bool i) {
-  GX_STATUS status;
-  if (i)
-    status = GXSetEnum(dev_handle_, GX_ENUM_GAIN_AUTO, GX_GAIN_AUTO_CONTINUOUS);
-  else
-    status = GXSetEnum(dev_handle_, GX_ENUM_GAIN_AUTO, GX_GAIN_AUTO_OFF);
-  return status == GX_STATUS_SUCCESS;
 }
 
 GalaxyCamera::~GalaxyCamera() {

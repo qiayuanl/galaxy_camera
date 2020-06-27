@@ -15,9 +15,7 @@ class GalaxyCamera {
                uint32_t offset_x, uint32_t offset_y,
                const std::string &encoding);
   ~GalaxyCamera();
-  bool setAutoGain(bool i);
-  bool setAutoBalance(bool i);
-  bool setAutoExposure(bool i);
+
  private:
   GX_DEV_HANDLE dev_handle_{};
 

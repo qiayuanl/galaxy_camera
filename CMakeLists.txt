@@ -8,7 +8,6 @@ find_package(catkin REQUIRED COMPONENTS
     message_generation
     dynamic_reconfigure
     image_transport
-    cv_bridge
     )
 
 find_package(OpenCV REQUIRED)
@@ -25,5 +24,5 @@ include_directories(
     ./
 )
 
-add_executable(main "src/main.cpp" "src/galaxy_camera.cpp")
-target_link_libraries(main gxiapi pthread ${OpenCV_LIBS} ${catkin_LIBRARIES})
+add_executable(galaxy_camera "src/galaxy_camera.cpp")
+target_link_libraries(galaxy_camera gxiapi pthread ${OpenCV_LIBS} ${catkin_LIBRARIES})

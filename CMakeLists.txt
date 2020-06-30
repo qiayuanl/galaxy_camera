@@ -8,11 +8,12 @@ find_package(catkin REQUIRED COMPONENTS
     message_generation
     dynamic_reconfigure
     image_transport
+    camera_info_manager
     )
 
 generate_dynamic_reconfigure_options(
+    cfg/camera.cfg
 )
-
 catkin_package(
 )
 

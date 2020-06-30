@@ -30,15 +30,18 @@ source devel/setup.bash
 roslaunch galaxy_camera MER-139.launch
 ```
 check the image on rqt_image_view.
+
 2. Adjust the params by rqt_reconfigure:
 ```
 rosrun rqt_reconfigure rqt_reconfigure
 ```
 ![image.png](https://i.loli.net/2020/07/01/IKDNkbQY2vJ3Tlx.png)
+
 3. Calibrate:
 ```
 rosrun camera_calibration cameracalibrator.py --size 7x5 --square 0.030 image:=/galaxy_camera/image_raw camera:=/galaxy_camera
 ```
+
 4. More information:
 http://wiki.ros.org/image_pipeline
 

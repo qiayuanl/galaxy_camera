@@ -35,7 +35,6 @@ GalaxyCameraNode::GalaxyCameraNode() : nh_("~") {
       image_height_, image_width_, image_width_ * 3,
       image_offset_x_, image_offset_y_, pixel_format_);
 }
-
 }
 
 int main(int argc, char **argv) {

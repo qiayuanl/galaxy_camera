@@ -77,8 +77,9 @@ void GalaxyCamera::onFrameCB(GX_FRAME_CALLBACK_PARAM *pFrame) {
                   pFrame->nWidth, pFrame->nHeight,
                   RAW2RGB_NEIGHBOUR, BAYERBG, false);
     memcpy((char *) (&image_.data[0]), img, image_.step * image_.height);
-    image_.header.stamp = ros::Time().now();
-    info_.header.stamp = ros::Time().now();
+    ros::Time now = ros::Time().now();
+    image_.header.stamp = now;
+    info_.header.stamp = now;
     pub_.publish(image_, info_);
   }
 }

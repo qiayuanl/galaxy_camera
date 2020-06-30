@@ -27,4 +27,4 @@ add_executable(galaxy_camera
     "src/galaxy_camera.cpp"
     "src/galaxy_camera_node.cpp")
 target_link_libraries(galaxy_camera
-    gxiapi pthread ${catkin_LIBRARIES})
+    gxiapi ${catkin_LIBRARIES})

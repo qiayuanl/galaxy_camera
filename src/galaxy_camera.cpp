@@ -113,10 +113,10 @@ void GalaxyCamera::reconfigCB(CameraConfig &config, uint32_t level) {
   // Black level
   if (config.black_auto) {
     GXSetEnum(dev_handle_, GX_ENUM_BLACKLEVEL_AUTO, GX_BLACKLEVEL_AUTO_CONTINUOUS);
-    GXGetFloat(dev_handle_, GX_FLOAT_GAIN, &config.black_value);
+    GXGetFloat(dev_handle_, GX_FLOAT_BLACKLEVEL, &config.black_value);
   } else {
     GXSetEnum(dev_handle_, GX_ENUM_BLACKLEVEL_AUTO, GX_BLACKLEVEL_AUTO_OFF);
-    GXGetFloat(dev_handle_, GX_FLOAT_GAIN, &config.black_value);
+    GXSetFloat(dev_handle_, GX_FLOAT_BLACKLEVEL, config.black_value);
   }
   // Balance White
   switch (config.white_selector) {

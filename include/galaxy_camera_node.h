@@ -11,7 +11,7 @@ namespace galaxy_camera {
 class GalaxyCameraNode {
  public:
   GalaxyCameraNode();
-
+  ~GalaxyCameraNode();
   ros::NodeHandle nh_;
   image_transport::CameraPublisher image_pub_;
   boost::shared_ptr<camera_info_manager::CameraInfoManager> info_;

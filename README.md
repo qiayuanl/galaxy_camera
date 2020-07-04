@@ -1,5 +1,5 @@
 # galaxy_camera
-ROS wrapper for the galaxy camera Made by Daheng Imaging.
+ROS wrapper for the galaxy camera made by Daheng Imaging.
 
 Dependencies:
 - ROS Melodic

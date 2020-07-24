@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 11)
 
 find_package(catkin REQUIRED COMPONENTS
     roscpp
+    nodelet
     message_generation
     dynamic_reconfigure
     image_transport
@@ -25,6 +26,6 @@ include_directories(
 
 add_executable(galaxy_camera
     "src/galaxy_camera.cpp"
-    "src/galaxy_camera_node.cpp")
+    )
 target_link_libraries(galaxy_camera
     gxiapi ${catkin_LIBRARIES})

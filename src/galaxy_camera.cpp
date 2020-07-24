@@ -1,28 +1,48 @@
 //
 // Created by qiayuan on 6/27/20.
 //
+#include <pluginlib/class_list_macros.h>
 
 #include <galaxy_camera.h>
 
 #include <utility>
 
+PLUGINLIB_EXPORT_CLASS(galaxy_camera::GalaxyCameraNodelet, nodelet::Nodelet);
 namespace galaxy_camera {
 
-GalaxyCamera::GalaxyCamera(const ros::NodeHandle &nh,
-                           image_transport::CameraPublisher &pub,
-                           sensor_msgs::CameraInfo info,
-                           uint32_t height, uint32_t width,
-                           uint32_t step,
-                           uint32_t offset_x, uint32_t offset_y,
-                           const std::string &encoding) {
-  pub_ = pub;
-  info_ = std::move(info);
-  image_.height = height;
-  image_.width = width;
-  image_.step = step;
-  image_.data.resize(height * step);
-  image_.encoding = encoding;
-  img = new char[height * step];
+GalaxyCameraNodelet::GalaxyCameraNodelet() : nh_("~") {}
+
+void GalaxyCameraNodelet::onInit() {
+  image_transport::ImageTransport it(nh_);
+  pub_ = it.advertiseCamera("image_raw", 1);
+  nh_.param("camera_frame_id", galaxy_camera::GalaxyCamera::image_.header.frame_id, std::string("pitch_camera"));
+  nh_.param("camera_name", camera_name_, std::string("pitch_camera"));
+  nh_.param("camera_info_url", camera_info_url_, std::string(""));
+  nh_.param("image_width", image_width_, 1280);
+  nh_.param("image_height", image_height_, 1024);
+  nh_.param("image_offset_x", image_offset_x_, 0);
+  nh_.param("image_offset_y", image_offset_y_, 0);
+  nh_.param("pixel_format", pixel_format_, std::string("bgr8"));
+  info_manager_.reset(new camera_info_manager::CameraInfoManager(nh_, camera_name_, camera_info_url_));
+  // check for default camera info
+  if (!info_manager_->isCalibrated()) {
+    info_manager_->setCameraName(camera_name_);
+    sensor_msgs::CameraInfo camera_info;
+    camera_info.header.frame_id = galaxy_camera::GalaxyCamera::image_.header.frame_id;
+    camera_info.width = image_width_;
+    camera_info.height = image_height_;
+    info_manager_->setCameraInfo(camera_info);
+  }
+  ROS_INFO("Starting '%s' at %dx%d", camera_name_.c_str(),
+           image_width_, image_height_);
+  info_ = std::move(info_manager_->getCameraInfo());
+  image_.height = image_height_;
+  image_.width = image_width_;
+  image_.step = image_width_ * 3;
+  image_.data.resize(image_.height * image_.step);
+  image_.encoding = pixel_format_;
+  img = new char[image_.height * image_.step];
+
   assert(GXInitLib() == GX_STATUS_SUCCESS); // Initializes the library.
   uint32_t device_num = 0;
   GXUpdateDeviceList(&device_num, 1000);
@@ -37,15 +57,15 @@ GalaxyCamera::GalaxyCamera(const ros::NodeHandle &nh,
   ROS_INFO("Camera Opened");
 
   int64_t format = 0;
-  if (encoding == "mono8")
+  if (pixel_format_ == "mono8")
     format = GX_PIXEL_FORMAT_MONO8;
-  if (encoding == "mono16")
+  if (pixel_format_ == "mono16")
     format = GX_PIXEL_FORMAT_MONO16;
-  if (encoding == "bgr8")
+  if (pixel_format_ == "bgr8")
     format = GX_PIXEL_FORMAT_BAYER_GB8;
-  if (encoding == "rgb8")
+  if (pixel_format_ == "rgb8")
     format = GX_PIXEL_FORMAT_BAYER_RG8;
-  if (encoding == "bgra8")
+  if (pixel_format_ == "bgra8")
     format = GX_PIXEL_FORMAT_BAYER_BG8;
   if (format == 0)
       static_assert(true, "Illegal format");
@@ -70,7 +90,7 @@ GalaxyCamera::GalaxyCamera(const ros::NodeHandle &nh,
   srv_->setCallback(cb);
 }
 
-void GalaxyCamera::onFrameCB(GX_FRAME_CALLBACK_PARAM *pFrame) {
+void GalaxyCameraNodelet::onFrameCB(GX_FRAME_CALLBACK_PARAM *pFrame) {
   if (pFrame->status == GX_FRAME_STATUS_SUCCESS) {
 
     DxRaw8toRGB24((void *) pFrame->pImgBuf, img,
@@ -84,7 +104,7 @@ void GalaxyCamera::onFrameCB(GX_FRAME_CALLBACK_PARAM *pFrame) {
   }
 }
 
-void GalaxyCamera::reconfigCB(CameraConfig &config, uint32_t level) {
+void GalaxyCameraNodelet::reconfigCB(CameraConfig &config, uint32_t level) {
   (void) level;
   // Exposure
   if (config.exposure_auto) {
@@ -140,15 +160,15 @@ void GalaxyCamera::reconfigCB(CameraConfig &config, uint32_t level) {
   }
 }
 
-GalaxyCamera::~GalaxyCamera() {
+GalaxyCameraNodelet::~GalaxyCameraNodelet() {
   GXStreamOff(dev_handle_);
   GXUnregisterCaptureCallback(dev_handle_);
   GXCloseDevice(dev_handle_);
   GXCloseLib();
 }
 
-char *GalaxyCamera::img;
-sensor_msgs::Image GalaxyCamera::image_;
-image_transport::CameraPublisher GalaxyCamera::pub_;
-sensor_msgs::CameraInfo GalaxyCamera::info_;
+char *GalaxyCameraNodelet::img;
+sensor_msgs::Image GalaxyCameraNodelet::image_;
+image_transport::CameraPublisher GalaxyCameraNodelet::pub_;
+sensor_msgs::CameraInfo GalaxyCameraNodelet::info_;
 }

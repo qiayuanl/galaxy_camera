@@ -2,9 +2,7 @@
 // Created by qiayuan on 6/27/20.
 //
 #include <pluginlib/class_list_macros.h>
-
 #include <galaxy_camera.h>
-
 #include <utility>
 
 PLUGINLIB_EXPORT_CLASS(galaxy_camera::GalaxyCameraNodelet, nodelet::Nodelet);
@@ -15,7 +13,9 @@ GalaxyCameraNodelet::GalaxyCameraNodelet() : nh_("~") {}
 void GalaxyCameraNodelet::onInit() {
   image_transport::ImageTransport it(nh_);
   pub_ = it.advertiseCamera("image_raw", 1);
-  nh_.param("camera_frame_id", galaxy_camera::GalaxyCamera::image_.header.frame_id, std::string("pitch_camera"));
+  nh_.param("camera_frame_id",
+            image_.header.frame_id,
+            std::string("pitch_camera"));
   nh_.param("camera_name", camera_name_, std::string("pitch_camera"));
   nh_.param("camera_info_url", camera_info_url_, std::string(""));
   nh_.param("image_width", image_width_, 1280);
@@ -23,12 +23,14 @@ void GalaxyCameraNodelet::onInit() {
   nh_.param("image_offset_x", image_offset_x_, 0);
   nh_.param("image_offset_y", image_offset_y_, 0);
   nh_.param("pixel_format", pixel_format_, std::string("bgr8"));
-  info_manager_.reset(new camera_info_manager::CameraInfoManager(nh_, camera_name_, camera_info_url_));
+  info_manager_.reset(new camera_info_manager::CameraInfoManager(
+      nh_, camera_name_, camera_info_url_));
+
   // check for default camera info
   if (!info_manager_->isCalibrated()) {
     info_manager_->setCameraName(camera_name_);
     sensor_msgs::CameraInfo camera_info;
-    camera_info.header.frame_id = galaxy_camera::GalaxyCamera::image_.header.frame_id;
+    camera_info.header.frame_id = image_.header.frame_id;
     camera_info.width = image_width_;
     camera_info.height = image_height_;
     info_manager_->setCameraInfo(camera_info);
@@ -71,22 +73,27 @@ void GalaxyCameraNodelet::onInit() {
       static_assert(true, "Illegal format");
 
   //assert(GXSetEnum(dev_handle_, GX_ENUM_PIXEL_FORMAT, format) == GX_STATUS_SUCCESS);
-  assert(GXSetInt(dev_handle_, GX_INT_WIDTH, width) == GX_STATUS_SUCCESS);
-  assert(GXSetInt(dev_handle_, GX_INT_HEIGHT, height) == GX_STATUS_SUCCESS);
-  assert(GXSetInt(dev_handle_, GX_INT_OFFSET_X, offset_x) == GX_STATUS_SUCCESS);
-  assert(GXSetInt(dev_handle_, GX_INT_OFFSET_Y, offset_y) == GX_STATUS_SUCCESS);
+  assert(
+      GXSetInt(dev_handle_, GX_INT_WIDTH, image_width_) == GX_STATUS_SUCCESS);
+  assert(
+      GXSetInt(dev_handle_, GX_INT_HEIGHT, image_height_) == GX_STATUS_SUCCESS);
+  assert(GXSetInt(dev_handle_, GX_INT_OFFSET_X, image_offset_x_)
+             == GX_STATUS_SUCCESS);
+  assert(GXSetInt(dev_handle_, GX_INT_OFFSET_Y, image_offset_y_)
+             == GX_STATUS_SUCCESS);
 
   GXRegisterCaptureCallback(dev_handle_,
                             nullptr,
-                            GalaxyCamera::onFrameCB);
+                            onFrameCB);
   GXStreamOn(dev_handle_);
   ROS_INFO("Stream On.");
-  GXSetEnum(dev_handle_, GX_ENUM_BALANCE_WHITE_AUTO, GX_BALANCE_WHITE_AUTO_CONTINUOUS);
+  GXSetEnum(dev_handle_, GX_ENUM_BALANCE_WHITE_AUTO,
+            GX_BALANCE_WHITE_AUTO_CONTINUOUS);
 
-  ros::NodeHandle p_nh(nh, "camera");
+  ros::NodeHandle p_nh(nh_, "camera");
   srv_ = new dynamic_reconfigure::Server<CameraConfig>(p_nh);
   dynamic_reconfigure::Server<CameraConfig>::CallbackType
-      cb = boost::bind(&GalaxyCamera::reconfigCB, this, _1, _2);
+      cb = boost::bind(&GalaxyCameraNodelet::reconfigCB, this, _1, _2);
   srv_->setCallback(cb);
 }
 
@@ -109,9 +116,12 @@ void GalaxyCameraNodelet::reconfigCB(CameraConfig &config, uint32_t level) {
   // Exposure
   if (config.exposure_auto) {
     double value;
-    GXSetFloat(dev_handle_, GX_FLOAT_AUTO_EXPOSURE_TIME_MAX, config.exposure_max);
-    GXSetFloat(dev_handle_, GX_FLOAT_AUTO_EXPOSURE_TIME_MIN, config.exposure_min);
-    GXSetEnum(dev_handle_, GX_ENUM_EXPOSURE_AUTO, GX_EXPOSURE_AUTO_CONTINUOUS);
+    GXSetFloat(dev_handle_,
+               GX_FLOAT_AUTO_EXPOSURE_TIME_MAX, config.exposure_max);
+    GXSetFloat(dev_handle_,
+               GX_FLOAT_AUTO_EXPOSURE_TIME_MIN, config.exposure_min);
+    GXSetEnum(dev_handle_,
+              GX_ENUM_EXPOSURE_AUTO, GX_EXPOSURE_AUTO_CONTINUOUS);
     GXGetFloat(dev_handle_, GX_FLOAT_EXPOSURE_TIME, &value);
     config.exposure_value = value;
   } else {
@@ -132,7 +142,9 @@ void GalaxyCameraNodelet::reconfigCB(CameraConfig &config, uint32_t level) {
 
   // Black level
   if (config.black_auto) {
-    GXSetEnum(dev_handle_, GX_ENUM_BLACKLEVEL_AUTO, GX_BLACKLEVEL_AUTO_CONTINUOUS);
+    GXSetEnum(dev_handle_,
+              GX_ENUM_BLACKLEVEL_AUTO,
+              GX_BLACKLEVEL_AUTO_CONTINUOUS);
     GXGetFloat(dev_handle_, GX_FLOAT_BLACKLEVEL, &config.black_value);
   } else {
     GXSetEnum(dev_handle_, GX_ENUM_BLACKLEVEL_AUTO, GX_BLACKLEVEL_AUTO_OFF);
@@ -140,11 +152,18 @@ void GalaxyCameraNodelet::reconfigCB(CameraConfig &config, uint32_t level) {
   }
   // Balance White
   switch (config.white_selector) {
-    case 0: GXSetEnum(dev_handle_, GX_ENUM_BALANCE_RATIO_SELECTOR, GX_BALANCE_RATIO_SELECTOR_RED);
+    case 0:
+      GXSetEnum(dev_handle_,
+                GX_ENUM_BALANCE_RATIO_SELECTOR, GX_BALANCE_RATIO_SELECTOR_RED);
       break;
-    case 1: GXSetEnum(dev_handle_, GX_ENUM_BALANCE_RATIO_SELECTOR, GX_BALANCE_RATIO_SELECTOR_GREEN);
+    case 1:
+      GXSetEnum(dev_handle_,
+                GX_ENUM_BALANCE_RATIO_SELECTOR,
+                GX_BALANCE_RATIO_SELECTOR_GREEN);
       break;
-    case 2: GXSetEnum(dev_handle_, GX_ENUM_BALANCE_RATIO_SELECTOR, GX_BALANCE_RATIO_SELECTOR_BLUE);
+    case 2:
+      GXSetEnum(dev_handle_,
+                GX_ENUM_BALANCE_RATIO_SELECTOR, GX_BALANCE_RATIO_SELECTOR_BLUE);
       break;
   }
   if (last_channel_ != config.white_selector) {
@@ -152,10 +171,14 @@ void GalaxyCameraNodelet::reconfigCB(CameraConfig &config, uint32_t level) {
     last_channel_ = config.white_selector;
   }
   if (config.white_auto) {
-    GXSetEnum(dev_handle_, GX_ENUM_BALANCE_WHITE_AUTO, GX_BALANCE_WHITE_AUTO_CONTINUOUS);
+    GXSetEnum(dev_handle_,
+              GX_ENUM_BALANCE_WHITE_AUTO,
+              GX_BALANCE_WHITE_AUTO_CONTINUOUS);
     GXGetFloat(dev_handle_, GX_FLOAT_BALANCE_RATIO, &config.white_value);
   } else {
-    GXSetEnum(dev_handle_, GX_ENUM_BALANCE_WHITE_AUTO, GX_BALANCE_WHITE_AUTO_OFF);
+    GXSetEnum(dev_handle_,
+              GX_ENUM_BALANCE_WHITE_AUTO,
+              GX_BALANCE_WHITE_AUTO_OFF);
     GXSetFloat(dev_handle_, GX_FLOAT_BALANCE_RATIO, config.white_value);
   }
 }

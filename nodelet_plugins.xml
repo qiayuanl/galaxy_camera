@@ -1,5 +1,7 @@
-<library path="lib/libGalaxyCamera">
-    <class name="galaxy_camera/GalaxyCameraNodelet" type="galaxy_camera::GalaxyCameraNodelet" base_class_type="nodelet::Nodelet">
+<library path="lib/libgalaxy_camera">
+    <class name="galaxy_camera/GalaxyCameraNodelet"
+           type="galaxy_camera::GalaxyCameraNodelet"
+           base_class_type="nodelet::Nodelet">
         <description>
             A implementation of galaxy_camera
         </description>

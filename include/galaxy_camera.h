@@ -16,7 +16,7 @@ namespace galaxy_camera {
 class GalaxyCameraNodelet : public nodelet::Nodelet {
  public:
   GalaxyCameraNodelet();
-  ~GalaxyCameraNodelet();
+  ~GalaxyCameraNodelet() override;
 
   void onInit() override;
   image_transport::CameraPublisher image_pub_;

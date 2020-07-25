@@ -5,12 +5,12 @@
 #include <galaxy_camera.h>
 #include <utility>
 
-PLUGINLIB_EXPORT_CLASS(galaxy_camera::GalaxyCameraNodelet, nodelet::Nodelet);
 namespace galaxy_camera {
-
-GalaxyCameraNodelet::GalaxyCameraNodelet() : nh_("~") {}
+PLUGINLIB_EXPORT_CLASS(galaxy_camera::GalaxyCameraNodelet, nodelet::Nodelet)
+GalaxyCameraNodelet::GalaxyCameraNodelet() {}
 
 void GalaxyCameraNodelet::onInit() {
+  nh_ = this->getPrivateNodeHandle();
   image_transport::ImageTransport it(nh_);
   pub_ = it.advertiseCamera("image_raw", 1);
   nh_.param("camera_frame_id",

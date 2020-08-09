@@ -3,6 +3,7 @@
 //
 #include <pluginlib/class_list_macros.h>
 #include <galaxy_camera.h>
+#include <nodelet/loader.h>
 #include <utility>
 
 namespace galaxy_camera {

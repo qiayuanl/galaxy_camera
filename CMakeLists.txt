@@ -29,7 +29,12 @@ include_directories(
 )
 
 add_library(galaxy_camera
-    "src/galaxy_camera.cpp"
+    src/galaxy_camera.cpp
     )
 target_link_libraries(galaxy_camera
+    gxiapi ${catkin_LIBRARIES})
+
+add_executable(galaxy_camera_node
+    src/galaxy_camera_node.cpp)
+target_link_libraries(galaxy_camera_node
     gxiapi ${catkin_LIBRARIES})

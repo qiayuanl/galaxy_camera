@@ -1,15 +1,15 @@
 <launch>
     <node pkg="nodelet" type="nodelet" name="standalone_nodelet" args="manager"
-          output="screen"/>
-    <node pkg="nodelet" type="nodelet" name="galaxy_camera"
-          args="load galaxy_camera/GalaxyCameraNodelet standalone_nodelet"
-          output="screen">
-        <param name="image_width" value="1280"/>
-        <param name="image_height" value="1024"/>
-        <param name="pixel_format" value="bgr8"/>
-        <param name="camera_info_url" value=""/>
-        <param name="camera_frame_id" value="pitch_camera"/>
-    </node>
+              output="screen"/>
+        <node pkg="nodelet" type="nodelet" name="GalaxyCameraNodelet"
+              args="load galaxy_camera/GalaxyCameraNodelet standalone_nodelet"
+              output="screen">
+              <param name="image_width" value="1280"/>
+              <param name="image_height" value="1024"/>
+              <param name="pixel_format" value="bgr8"/>
+              <param name="camera_info_url" value=""/>
+              <param name="camera_frame_id" value="pitch_camera"/>
+        </node>
     <node name="rqt_image_view" pkg="rqt_image_view" type="rqt_image_view"
           respawn="false" output="screen">
     </node>

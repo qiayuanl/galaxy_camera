@@ -31,10 +31,9 @@ class GalaxyCameraNodelet : public nodelet::Nodelet {
   int last_channel_ = 0;
 
   boost::shared_ptr<camera_info_manager::CameraInfoManager> info_manager_;
-  std::string camera_name_, camera_info_url_, pixel_format_;
+  std::string camera_name_, camera_info_url_, pixel_format_, frame_id_;
   int image_width_{}, image_height_{}, image_offset_x_{}, image_offset_y_{};
-
-  static char *img;
+  static char *img_;
   static image_transport::CameraPublisher pub_;
   static sensor_msgs::CameraInfo info_;
   static void GX_STDC onFrameCB(GX_FRAME_CALLBACK_PARAM *pFrame);

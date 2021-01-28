@@ -24,6 +24,8 @@ void GalaxyCameraNodelet::onInit() {
   nh_.param("image_offset_x", image_offset_x_, 0);
   nh_.param("image_offset_y", image_offset_y_, 0);
   nh_.param("pixel_format", pixel_format_, std::string("bgr8"));
+  nh_.param("frame_id", frame_id_, std::string("camera"));
+
   info_manager_.reset(new camera_info_manager::CameraInfoManager(
       nh_, camera_name_, camera_info_url_));
 
@@ -39,12 +41,14 @@ void GalaxyCameraNodelet::onInit() {
   ROS_INFO("Starting '%s' at %dx%d", camera_name_.c_str(),
            image_width_, image_height_);
   info_ = std::move(info_manager_->getCameraInfo());
+  info_.header.frame_id = frame_id_;
+  image_.header.frame_id = frame_id_;
   image_.height = image_height_;
   image_.width = image_width_;
   image_.step = image_width_ * 3;
   image_.data.resize(image_.height * image_.step);
   image_.encoding = pixel_format_;
-  img = new char[image_.height * image_.step];
+  img_ = new char[image_.height * image_.step];
 
   assert(GXInitLib() == GX_STATUS_SUCCESS); // Initializes the library.
   uint32_t device_num = 0;
@@ -101,11 +105,11 @@ void GalaxyCameraNodelet::onInit() {
 void GalaxyCameraNodelet::onFrameCB(GX_FRAME_CALLBACK_PARAM *pFrame) {
   if (pFrame->status == GX_FRAME_STATUS_SUCCESS) {
 
-    DxRaw8toRGB24((void *) pFrame->pImgBuf, img,
+    DxRaw8toRGB24((void *) pFrame->pImgBuf, img_,
                   pFrame->nWidth, pFrame->nHeight,
                   RAW2RGB_NEIGHBOUR, BAYERBG, false);
-    memcpy((char *) (&image_.data[0]), img, image_.step * image_.height);
-    ros::Time now = ros::Time().now();
+    memcpy((char *) (&image_.data[0]), img_, image_.step * image_.height);
+    ros::Time now = ros::Time::now();
     image_.header.stamp = now;
     info_.header.stamp = now;
     pub_.publish(image_, info_);
@@ -191,7 +195,7 @@ GalaxyCameraNodelet::~GalaxyCameraNodelet() {
   GXCloseLib();
 }
 
-char *GalaxyCameraNodelet::img;
+char *GalaxyCameraNodelet::img_;
 sensor_msgs::Image GalaxyCameraNodelet::image_;
 image_transport::CameraPublisher GalaxyCameraNodelet::pub_;
 sensor_msgs::CameraInfo GalaxyCameraNodelet::info_;

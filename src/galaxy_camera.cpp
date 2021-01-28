@@ -14,10 +14,8 @@ void GalaxyCameraNodelet::onInit() {
   nh_ = this->getPrivateNodeHandle();
   image_transport::ImageTransport it(nh_);
   pub_ = it.advertiseCamera("image_raw", 1);
-  nh_.param("camera_frame_id",
-            image_.header.frame_id,
-            std::string("pitch_camera"));
-  nh_.param("camera_name", camera_name_, std::string("pitch_camera"));
+  nh_.param("camera_frame_id", image_.header.frame_id, std::string("camera"));
+  nh_.param("camera_name", camera_name_, std::string("camera"));
   nh_.param("camera_info_url", camera_info_url_, std::string(""));
   nh_.param("image_width", image_width_, 1280);
   nh_.param("image_height", image_height_, 1024);

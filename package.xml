@@ -26,6 +26,7 @@
     <exec_depend>dynamic_reconfigure</exec_depend>
     <exec_depend>image_transport</exec_depend>
     <exec_depend>camera_info_manager</exec_depend>
+    <exec_depend>image_transport_plugins</exec_depend>
 
     <!-- The export tag contains other, unspecified, tags -->
     <export>

@@ -12,10 +12,17 @@
 #include <galaxy_camera/CameraConfig.h>
 #include <camera_info_manager/camera_info_manager.h>
 #include <dynamic_reconfigure/client.h>
-#include <std_msgs/UInt8.h>
+#include <sensor_msgs/TimeReference.h>
 
 namespace galaxy_camera
 {
+#define FIFO_SIZE 1023
+
+struct TriggerPacket
+{
+  uint32_t trigger_counter_;
+  ros::Time trigger_time_;
+};
 class GalaxyCameraNodelet : public nodelet::Nodelet
 {
 public:
@@ -27,6 +34,7 @@ public:
 
 private:
   void reconfigCB(CameraConfig& config, uint32_t level);
+  void triggerCB(const sensor_msgs::TimeReference::ConstPtr& time_ref);
 
   ros::NodeHandle nh_;
   GX_DEV_HANDLE dev_handle_{};
@@ -35,11 +43,22 @@ private:
 
   boost::shared_ptr<camera_info_manager::CameraInfoManager> info_manager_;
   std::string camera_name_, camera_info_url_, pixel_format_, frame_id_, camera_sn_;
-  int image_width_{}, image_height_{}, image_offset_x_{}, image_offset_y_{}, exposure_value_{};
+  int image_width_{}, image_height_{}, image_offset_x_{}, image_offset_y_{}, exposure_value_{}, frame_rate_{};
+  static bool is_trigger_;
   static char* img_;
   static image_transport::CameraPublisher pub_;
   static sensor_msgs::CameraInfo info_;
   static void GX_STDC onFrameCB(GX_FRAME_CALLBACK_PARAM* pFrame);
+
+  ros::Subscriber trigger_sub_;
+  static TriggerPacket fifo_[FIFO_SIZE];
+  static uint32_t next_trigger_counter_;
+  static int fifo_read_num_;
+  static int fifo_write_num_;
+  static void fifoWrite(TriggerPacket pkt);
+  static bool fifoRead(TriggerPacket& pkt);
+  static bool fifoLook(TriggerPacket& pkt);
+  static int out_of_counter_;
 };
 }  // namespace galaxy_camera
 

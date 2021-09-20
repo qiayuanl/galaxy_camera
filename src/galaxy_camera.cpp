@@ -29,6 +29,8 @@ void GalaxyCameraNodelet::onInit()
   nh_.param("pixel_format", pixel_format_, std::string("bgr8"));
   nh_.param("frame_id", frame_id_, std::string("camera_optical_frame"));
   nh_.param("camera_sn", camera_sn_, std::string(""));
+  nh_.param("frame_rate", frame_rate_, 200);
+  nh_.param("is_trigger", is_trigger_, false);
 
   info_manager_.reset(new camera_info_manager::CameraInfoManager(nh_, camera_name_, camera_info_url_));
 
@@ -97,6 +99,17 @@ void GalaxyCameraNodelet::onInit()
   assert(GXSetInt(dev_handle_, GX_INT_HEIGHT, image_height_) == GX_STATUS_SUCCESS);
   assert(GXSetInt(dev_handle_, GX_INT_OFFSET_X, image_offset_x_) == GX_STATUS_SUCCESS);
   assert(GXSetInt(dev_handle_, GX_INT_OFFSET_Y, image_offset_y_) == GX_STATUS_SUCCESS);
+  assert(GXSetEnum(dev_handle_, GX_ENUM_ACQUISITION_FRAME_RATE_MODE, GX_ACQUISITION_FRAME_RATE_MODE_ON) ==
+         GX_STATUS_SUCCESS);
+  assert(GXSetFloat(dev_handle_, GX_FLOAT_ACQUISITION_FRAME_RATE, frame_rate_) == GX_STATUS_SUCCESS);
+  if (is_trigger_)
+  {
+    assert(GXSetEnum(dev_handle_, GX_ENUM_TRIGGER_MODE, GX_TRIGGER_MODE_ON) == GX_STATUS_SUCCESS);
+    assert(GXSetEnum(dev_handle_, GX_ENUM_TRIGGER_ACTIVATION, GX_TRIGGER_ACTIVATION_RISINGEDGE) == GX_STATUS_SUCCESS);
+
+    trigger_sub_ = nh_.subscribe("", 1000, &galaxy_camera::GalaxyCameraNodelet::triggerCB, this);
+  }
+
   GXRegisterCaptureCallback(dev_handle_, nullptr, onFrameCB);
   GXStreamOn(dev_handle_);
   ROS_INFO("Stream On.");
@@ -109,15 +122,84 @@ void GalaxyCameraNodelet::onInit()
   srv_->setCallback(cb);
 }
 
+void GalaxyCameraNodelet::triggerCB(const sensor_msgs::TimeReference::ConstPtr& time_ref)
+{
+  galaxy_camera::TriggerPacket pkt;
+  pkt.trigger_time_ = time_ref->header.stamp;
+  pkt.trigger_counter_ = time_ref->header.seq;
+  fifoWrite(pkt);
+}
+
+void GalaxyCameraNodelet::fifoWrite(TriggerPacket pkt)
+{
+  fifo_[fifo_write_num_] = pkt;
+  fifo_write_num_ = (fifo_write_num_ + 1) % FIFO_SIZE;
+  if (fifo_write_num_ == fifo_read_num_)
+  {
+    ROS_WARN("FIFO overflow!");
+  }
+}
+
+bool GalaxyCameraNodelet::fifoRead(TriggerPacket& pkt)
+{
+  if (fifo_read_num_ == fifo_write_num_)
+    return false;
+  pkt = fifo_[fifo_read_num_];
+  fifo_read_num_ = (fifo_read_num_ + 1) % FIFO_SIZE;
+  return true;
+}
+
+bool GalaxyCameraNodelet::fifoLook(TriggerPacket& pkt)
+{
+  if (fifo_read_num_ == fifo_write_num_)
+    return false;
+  pkt = fifo_[fifo_read_num_];
+  return true;
+}
+
 void GalaxyCameraNodelet::onFrameCB(GX_FRAME_CALLBACK_PARAM* pFrame)
 {
   if (pFrame->status == GX_FRAME_STATUS_SUCCESS)
   {
     DxRaw8toRGB24((void*)pFrame->pImgBuf, img_, pFrame->nWidth, pFrame->nHeight, RAW2RGB_NEIGHBOUR, BAYERBG, false);
     memcpy((char*)(&image_.data[0]), img_, image_.step * image_.height);
-    ros::Time now = ros::Time::now();
-    image_.header.stamp = now;
-    info_.header.stamp = now;
+
+    if (is_trigger_)
+    {
+      TriggerPacket pkt;
+      while (!fifoLook(pkt))
+      {
+        ros::Duration(0.001).sleep();
+      }
+      if (pkt.trigger_counter_ == 0)
+        next_trigger_counter_ = 0;
+      if (pkt.trigger_counter_ == next_trigger_counter_)
+      {
+        fifoRead(pkt);
+        //        const auto expose_us = bluefox2_ros_->camera().GetExposeUs();
+        //        const auto expose_duration = ros::Duration(expose_us * 1e-6 / 2);
+        //        const auto time = ros::Time::now() + expose_duration;
+        image_.header.stamp = pkt.trigger_time_;
+        info_.header.stamp = pkt.trigger_time_;
+      }
+      else
+      {
+        // ros::Duration(0.001).sleep();
+        out_of_counter_++;
+        if ((out_of_counter_ % 100) == 0)
+        {
+          // ROS_WARN("trigger not in sync (seq expected %10u, got %10u)!", nextTriggerCounter, pkt.triggerCounter);
+          ROS_WARN("trigger not in sync (%d)!", out_of_counter_);
+        }
+      }
+      next_trigger_counter_++;
+    }
+    else
+    {
+      ros::Time now = ros::Time::now();
+      image_.header.stamp = now;
+      info_.header.stamp = now;
+    }
     pub_.publish(image_, info_);
   }
 }

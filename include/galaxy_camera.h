@@ -13,6 +13,7 @@
 #include <camera_info_manager/camera_info_manager.h>
 #include <dynamic_reconfigure/client.h>
 #include <sensor_msgs/TimeReference.h>
+#include <rm_msgs/CameraStatus.h>
 
 namespace galaxy_camera
 {
@@ -37,18 +38,22 @@ private:
   void triggerCB(const sensor_msgs::TimeReference::ConstPtr& time_ref);
 
   ros::NodeHandle nh_;
-  GX_DEV_HANDLE dev_handle_{};
+  static GX_DEV_HANDLE dev_handle_;
   dynamic_reconfigure::Server<CameraConfig>* srv_{};
   int last_channel_ = 0;
 
   boost::shared_ptr<camera_info_manager::CameraInfoManager> info_manager_;
   std::string camera_name_, camera_info_url_, pixel_format_, frame_id_, camera_sn_;
-  int image_width_{}, image_height_{}, image_offset_x_{}, image_offset_y_{}, exposure_value_{}, frame_rate_{};
+  int image_width_{}, image_height_{}, image_offset_x_{}, image_offset_y_{}, raising_filter_value_{};
   static bool is_trigger_;
   static char* img_;
   static image_transport::CameraPublisher pub_;
   static sensor_msgs::CameraInfo info_;
   static void GX_STDC onFrameCB(GX_FRAME_CALLBACK_PARAM* pFrame);
+
+  static bool device_open_;
+  static bool imuCorrespondence(rm_msgs::CameraStatus::Request& req, rm_msgs::CameraStatus::Response& res);
+  ros::ServiceServer imu_correspondence_service_;
 
   ros::Subscriber trigger_sub_;
   static TriggerPacket fifo_[FIFO_SIZE];

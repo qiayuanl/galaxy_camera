@@ -16,10 +16,9 @@ generate_dynamic_reconfigure_options(
         cfg/camera.cfg
 )
 
-
 catkin_package(
         LIBRARIES galaxy_camera
-        CATKIN_DEPENDS nodelet roscpp dynamic_reconfigure
+        CATKIN_DEPENDS nodelet roscpp dynamic_reconfigure message_runtime
         image_transport camera_info_manager
 )
 

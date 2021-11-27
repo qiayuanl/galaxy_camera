@@ -7,10 +7,10 @@ Dependencies:
 
 ONLY TESTED ON MER-139!!!
 
-# Getting started 
+# Getting started
 ## Install dependencies
 - ROS - http://wiki.ros.org/ROS
-- gxiapi: - download `Galaxy_Linux-x86_Gige-U3_32bits-64bits_1.2.1911.9122` from 
+- gxiapi: - download `Galaxy_Linux-x86_Gige-U3_32bits-64bits_1.2.1911.9122` from
 http://gb.daheng-imaging.com/CN/Software and install
 
 ## Download and build code

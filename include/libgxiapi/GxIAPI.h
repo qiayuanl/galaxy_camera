@@ -1,6 +1,6 @@
 /**
 @File      GxIAPI.h
-@Brief     the interface for the GxIAPI dll module. 
+@Brief     the interface for the GxIAPI dll module.
 @Author    Software Department
 @Date      2019-5-14
 @Version   1.1.1905.9141
@@ -11,7 +11,7 @@
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////
-//  Type definitions. The following types are defined in the standard C library header 
+//  Type definitions. The following types are defined in the standard C library header
 //  stdint.h. This file is not included in the previous version of Microsoft's compilation
 //  platform VS 2010, so type definitions need to be redefined here.
 ////////////////////////////////////////////////////////////////////////////////////////////

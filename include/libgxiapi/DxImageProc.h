@@ -1,13 +1,13 @@
-//--------------------------------------------------------------- 
-/** 
+//---------------------------------------------------------------
+/**
 \file      DxImageProc.h
 \brief     Image Processing Library
-\version   v1.0.1904.9101 
+\version   v1.0.1904.9101
 \date      2019-04-10
-\author    Software Department 
-<p>Copyright (c) 2012-2019 and all right reserved.</p> 
+\author    Software Department
+<p>Copyright (c) 2012-2019 and all right reserved.</p>
 */
-//--------------------------------------------------------------- 
+//---------------------------------------------------------------
 
 #if !defined (_DXIMAGEPROC_H)
 #define _DXIMAGEPROC_H            ///< pre-compiled macro define
@@ -94,7 +94,7 @@ typedef enum DX_RGB_CHANNEL_ORDER {
   DX_ORDER_BGR = 1
 } DX_RGB_CHANNEL_ORDER;
 
-/// mono8 image process struct 
+/// mono8 image process struct
 typedef struct MONO_IMG_PROCESS {
   bool bDefectivePixelCorrect;
   bool bSharpness;
@@ -105,7 +105,7 @@ typedef struct MONO_IMG_PROCESS {
   VxUint8 arrReserved[32];
 } MONO_IMG_PROCESS;
 
-/// Raw8 Image process struct 
+/// Raw8 Image process struct
 typedef struct COLOR_IMG_PROCESS {
   bool bDefectivePixelCorrect;
   bool bDenoise;
@@ -125,15 +125,15 @@ typedef struct COLOR_IMG_PROCESS {
 //--------------------------------------------------
 /**
 \brief  Convert Raw8 to Rgb24
-\param  pInputBuffer   	[in] input buffer 
+\param  pInputBuffer   	[in] input buffer
 \param  pOutputBuffer   [out]output buffer(new buffer)
 \param  nWidth  	    [in] image width
 \param  nHeight   	    [in] image height
-\param  cvtype          [in] Bayer convert type 
-\param  nBayerType      [in] pixel color filter 
+\param  cvtype          [in] Bayer convert type
+\param  nBayerType      [in] pixel color filter
 \param  bFlip           [in] output image flip or not, true:flip false:not flip
 
-\return emStatus  
+\return emStatus
 */
 //--------------------------------------------------
 VxInt32 DHDECL DxRaw8toRGB24(void *pInputBuffer,
@@ -147,16 +147,16 @@ VxInt32 DHDECL DxRaw8toRGB24(void *pInputBuffer,
 //--------------------------------------------------
 /**
 \brief  Convert Raw8 to Rgb24 with choosen RGB channel order
-\param  pInputBuffer   	[in] input buffer 
+\param  pInputBuffer   	[in] input buffer
 \param  pOutputBuffer   [out]output buffer(new buffer)
 \param  nWidth  	    [in] image width
 \param  nHeight   	    [in] image height
-\param  cvtype          [in] Bayer convert type 
-\param  nBayerType      [in] pixel color filter 
+\param  cvtype          [in] Bayer convert type
+\param  nBayerType      [in] pixel color filter
 \param  bFlip           [in] output image flip or not, true:flip false:not flip
 \param  emChannelOrder	[in] RGB channel order of output image
 
-\return emStatus  
+\return emStatus
 */
 //--------------------------------------------------
 VxInt32 DHDECL DxRaw8toRGB24Ex(void *pInputBuffer,
@@ -171,12 +171,12 @@ VxInt32 DHDECL DxRaw8toRGB24Ex(void *pInputBuffer,
 //--------------------------------------------------
 /**
 \brief  Convert Raw12Packed to Raw16
-\param  pInputBuffer   	[in] input Buffer 
+\param  pInputBuffer   	[in] input Buffer
 \param  pOutputBuffer   [out]output Buffer(new buffer)
 \param  nWidth          [in] image width
-\param  nHeight         [in] image height                      
+\param  nHeight         [in] image height
 
-\return emStatus  
+\return emStatus
 */
 //--------------------------------------------------
 VxInt32 DHDECL DxRaw12PackedToRaw16(void *pInputBuffer, void *pOutputBuffer, VxUint32 nWidth, VxUint32 nHeight);
@@ -184,10 +184,10 @@ VxInt32 DHDECL DxRaw12PackedToRaw16(void *pInputBuffer, void *pOutputBuffer, VxU
 //-------------------------------------------------
 /**
 \brief  Convert Raw10Packed to Raw16
-\param  pInputBuffer   	[in] input buffer 
+\param  pInputBuffer   	[in] input buffer
 \param  pOutputBuffer   [out]output buffer(new buffer)
 \param  nWidth          [in] image width
-\param  nHeight         [in] image height 
+\param  nHeight         [in] image height
 
 \return emStatus
 */
@@ -197,10 +197,10 @@ VxInt32 DHDECL DxRaw10PackedToRaw16(void *pInputBuffer, void *pOutputBuffer, VxU
 //------------------------------------------------
 /**
 \brief  To rotate the 8-bit image clockwise by 90 degrees
-\param  pInputBuffer  	[in] input buffer 
-\param  pOutputBuffer	[out]output buffer(new buffer)  
+\param  pInputBuffer  	[in] input buffer
+\param  pOutputBuffer	[out]output buffer(new buffer)
 \param  nWidth        	[in] image width
-\param  nHeight       	[in] image height 
+\param  nHeight       	[in] image height
 
 \return emStatus
 */
@@ -210,10 +210,10 @@ VxInt32 DHDECL DxRotate90CW8B(void *pInputBuffer, void *pOutputBuffer, VxUint32 
 //------------------------------------------------
 /**
 \brief  To rotate the 8-bit image counter clockwise by 90 degrees
-\param  pInputBuffer    [in] input buffer 
-\param  pOutputBuffer	[out]output buffer(new buffer) 
+\param  pInputBuffer    [in] input buffer
+\param  pOutputBuffer	[out]output buffer(new buffer)
 \param  nWidth          [in] image width
-\param  nHeight         [in] image height 
+\param  nHeight         [in] image height
 
 \return emStatus
 */
@@ -223,8 +223,8 @@ VxInt32 DHDECL DxRotate90CCW8B(void *pInputBuffer, void *pOutputBuffer, VxUint32
 //-----------------------------------------------
 /**
 \brief  Brightness adjustment (RGB24 or gray image of 8-bit)
-\param  pInputBuffer  	[in] input buffer 
-\param  pOutputBuffer	[out]output buffer 
+\param  pInputBuffer  	[in] input buffer
+\param  pOutputBuffer	[out]output buffer
 \param  nImagesize    	[in] image size,unit:byte(RGB:width * height * 3)
 \param  nFactor        	[in] factor,range(-150~150)
 
@@ -236,7 +236,7 @@ VxInt32 DHDECL DxBrightness(void *pInputBuffer, void *pOutputBuffer, VxUint32 nI
 //--------------------------------------------------
 /**
 \brief  Contrast adjustment(RGB24 or gray image of 8-bit)
-\param  pInputBuffer	[in] input buffer      
+\param  pInputBuffer	[in] input buffer
 \param  pOutputBuffer	[out]output buffer
 \param  nImagesize      [in] image size,unit:byte(RGB:width * height * 3)
 \param  nFactor	        [in] factor,range(-50~100)
@@ -249,10 +249,10 @@ VxInt32 DHDECL DxContrast(void *pInputBuffer, void *pOutputBuffer, VxUint32 nIma
 //--------------------------------------------------
 /**
 \brief  Sharpen adjustment (RGB24)
-\param  pInputBuffer	[in] input buffer      
+\param  pInputBuffer	[in] input buffer
 \param  pOutputBuffer	[out]output buffer
 \param  nWidth          [in] image width
-\param  nHeight         [in] image height 
+\param  nHeight         [in] image height
 \param  fFactor        	[in] factor,range(0.1~5.0)
 
 \return emStatus
@@ -263,12 +263,12 @@ VxInt32 DHDECL DxSharpen24B(void *pInputBuffer, void *pOutputBuffer, VxUint32 nW
 //--------------------------------------------------
 /**
 \brief  Saturation adjustment (RGB24)
-\param  pInputBuffer	[in] input buffer      
+\param  pInputBuffer	[in] input buffer
 \param  pOutputBuffer	[out]output buffer
 \param  nImageSize     	[in] image size (width * height)
 \param  nFactor        	[in] factor,range(0 ~ 128)
 
-\return emStatus   
+\return emStatus
 */
 //--------------------------------------------------
 VxInt32 DHDECL DxSaturation(void *pInputBuffer, void *pOutputBuffer, VxUint32 nImagesize, VxInt32 nFactor);
@@ -284,7 +284,7 @@ VxInt32 DHDECL DxSaturation(void *pInputBuffer, void *pOutputBuffer, VxUint32 nI
 \param  dRatioG         [out]G ratio
 \param  dRatioB         [out]B ratio
 
-\return emStatus  
+\return emStatus
 */
 //--------------------------------------------------
 VxInt32 DHDECL DxGetWhiteBalanceRatio(void *pInputBuffer,
@@ -296,7 +296,7 @@ VxInt32 DHDECL DxGetWhiteBalanceRatio(void *pInputBuffer,
 
 //-----------------------------------------------------
 /**
-\brief  Auto raw defective pixel correct,Support image from Raw8 to Raw16, the bit number is actual bit number, when it is more than 8, the actual bit 
+\brief  Auto raw defective pixel correct,Support image from Raw8 to Raw16, the bit number is actual bit number, when it is more than 8, the actual bit
         can be every number between 9 to 16. And if image format is packed, you need convert it to Raw16.This function should be used in each frame.
 
 \param  pRawImgBuf      [in,out]Raw image buffer
@@ -304,7 +304,7 @@ VxInt32 DHDECL DxGetWhiteBalanceRatio(void *pInputBuffer,
 \param  nHeight       	[in]image height
 \param  nBitNum         [in]image bit number (for example:if image 10bit, nBitNum = 10, if image 12bit,nBitNum = 12,range:8 ~ 16)
 
-\return emStatus  
+\return emStatus
 */
 //-----------------------------------------------------
 VxInt32 DHDECL DxAutoRawDefectivePixelCorrect(void *pRawImgBuf, VxUint32 nWidth, VxUint32 nHeight, VxInt32 nBitNum);
@@ -318,7 +318,7 @@ VxInt32 DHDECL DxAutoRawDefectivePixelCorrect(void *pRawImgBuf, VxUint32 nWidth,
 \param  nHeight         [in] image height
 \param  nValidBits      [in] valid bits
 
-\return emStatus  
+\return emStatus
 */
 //--------------------------------------------------
 VxInt32 DHDECL DxRaw16toRaw8(void *pInputBuffer,
@@ -334,9 +334,9 @@ VxInt32 DHDECL DxRaw16toRaw8(void *pInputBuffer,
 \param  pOutputBuffer   [out]output buffer(new buffer,size:width * height * 3)
 \param  nWidth          [in] image width
 \param  nHeight         [in] image height
-\param  nValidBits      [in] valid bits 
+\param  nValidBits      [in] valid bits
 
-\return emStatus  
+\return emStatus
 */
 //--------------------------------------------------
 VxInt32 DHDECL DxRGB48toRGB24(void *pInputBuffer,
@@ -353,11 +353,11 @@ VxInt32 DHDECL DxRGB48toRGB24(void *pInputBuffer,
 \param  nWidth  	    [in] image width
 \param  nHeight   	    [in] image height
 \param  nActualBits     [in] image actual bits
-\param  cvtype          [in] Bayer convert type 
+\param  cvtype          [in] Bayer convert type
 \param  nBayerType      [in] pixel color filter
 \param  bFlip           [in] image flip or not, true:flip false:not flip
 
-\return emStatus  
+\return emStatus
 */
 //--------------------------------------------------
 VxInt32 DHDECL DxRaw16toRGB48(void *pInputBuffer,
@@ -378,12 +378,12 @@ VxInt32 DHDECL DxRaw16toRGB48(void *pInputBuffer,
 \param  nHeight   	    [in] image height
 \param  nStride         [in] Android surface stride
 \param  nActualBits     [in] image actual bits
-\param  cvtype          [in] Bayer convert type 
+\param  cvtype          [in] Bayer convert type
 \param  nBayerType      [in] pixel color filter
 \param  bFlip           [in] image flip or not, true:flip false:not flip
 \param  nAlpha			[in] value of channal Alpha
 
-\return emStatus  
+\return emStatus
 */
 //--------------------------------------------------
 VxInt32 DHDECL DxRaw8toARGB32(void *pInputBuffer,
@@ -403,7 +403,7 @@ VxInt32 DHDECL DxRaw8toARGB32(void *pInputBuffer,
 \param  pContrastLut    [out]contrast lookup table
 \param  pLutLength      [out]contrast lookup table length(unit:byte)
 
-\return emStatus  
+\return emStatus
 */
 //--------------------------------------------------
 VxInt32 DHDECL DxGetContrastLut(int nContrastParam, void *pContrastLut, int *pLutLength);
@@ -411,11 +411,11 @@ VxInt32 DHDECL DxGetContrastLut(int nContrastParam, void *pContrastLut, int *pLu
 //--------------------------------------------------
 /**
 \brief  calculating gamma lookup table (RGB24)
-\param  dGammaParam   [in] gamma param,range(0.1 ~ 10) 
+\param  dGammaParam   [in] gamma param,range(0.1 ~ 10)
 \param  pGammaLut     [out]gamma lookup table
 \param  pLutLength    [out]gamma lookup table length(unit:byte)
 
-\return emStatus  
+\return emStatus
 */
 //--------------------------------------------------
 VxInt32 DHDECL DxGetGammatLut(double dGammaParam, void *pGammaLut, int *pLutLength);
@@ -431,7 +431,7 @@ VxInt32 DHDECL DxGetGammatLut(double dGammaParam, void *pGammaLut, int *pLutLeng
 \param  pContrastLut          [in] contrast lookup table
 \param  pGammaLut             [in] gamma lookup table
 
-\return emStatus  
+\return emStatus
 */
 //--------------------------------------------------
 VxInt32 DHDECL DxImageImprovment(void *pInputBuffer,
@@ -453,7 +453,7 @@ VxInt32 DHDECL DxImageImprovment(void *pInputBuffer,
 \param  pContrastLut          [in] contrast lookup table
 \param  pGammaLut             [in] gamma lookup table
 
-\return emStatus  
+\return emStatus
 */
 //--------------------------------------------------
 VxInt32 DHDECL DxARGBImageImprovment(void *pInputBuffer,
@@ -476,7 +476,7 @@ VxInt32 DHDECL DxARGBImageImprovment(void *pInputBuffer,
 \param  pGammaLut             [in] gamma lookup table
 \param  emChannelOrder        [in] RGB channel order of output image
 
-\return emStatus  
+\return emStatus
 */
 //--------------------------------------------------
 VxInt32 DHDECL DxImageImprovmentEx(void *pInputBuffer,
@@ -490,7 +490,7 @@ VxInt32 DHDECL DxImageImprovmentEx(void *pInputBuffer,
 
 //-------------------------------------------------------------
 /**
-\brief  image mirror(Raw8 or 8bit image) 
+\brief  image mirror(Raw8 or 8bit image)
 \param  pInputBuff   	[in] input buffer
 \param  pOutputBuf      [out]output buffer
 \param  nWidth          [in] image width
@@ -508,7 +508,7 @@ VxInt32 DHDECL DxImageMirror(void *pInputBuffer,
 
 //--------------------------------------------------
 /**
-\brief  calculating lookup table of 8bit image 
+\brief  calculating lookup table of 8bit image
 \param  nContrastParam  [in] contrast param,range(-50~100)
 \param  dGamma          [in] gamma param,range(0.1~10)
 \param  nLightness      [in] lightness param,range(-150~150)
@@ -522,7 +522,7 @@ VxInt32 DHDECL DxGetLut(VxInt32 nContrastParam, double dGamma, VxInt32 nLightnes
 
 //--------------------------------------------------
 /**
-\brief  calculating array of image processing color adjustment 
+\brief  calculating array of image processing color adjustment
 \param  nColorCorrectionParam   [in] color correction param address(get from camera)
 \param  nSaturation             [in] saturation factor,Range(0~128)
 \param  parrCC                  [out]array address
@@ -535,14 +535,14 @@ VxInt32 DHDECL DxCalcCCParam(VxInt64 nColorCorrectionParam, VxInt16 nSaturation,
 
 //--------------------------------------------------
 /**
-\brief  Raw8 image process 
+\brief  Raw8 image process
 \param  pRaw8Buf    	      [in] input buffer
 \param  pRgb24Buf             [out]output buffer(new buffer)
 \param  nWidth                [in] image width
 \param  nHeight               [in] image height
 \param  pstClrImgProc         [in] Raw8 image process struct pointer
 
-\return emStatus  
+\return emStatus
 */
 //--------------------------------------------------
 VxInt32 DHDECL DxRaw8ImgProcess(void *pRaw8Buf,
@@ -553,14 +553,14 @@ VxInt32 DHDECL DxRaw8ImgProcess(void *pRaw8Buf,
 
 //--------------------------------------------------
 /**
-\brief  Mono8 image process 
+\brief  Mono8 image process
 \param  pInputBuf    	      [in] input buffer
 \param  pOutputBuf            [out]output buffer(new buffer)
 \param  nWidth                [in] image width
 \param  nHeight               [in] image height
 \param  pstGrayImgProc        [in] mono8 image process struct pointer
 
-\return emStatus  
+\return emStatus
 */
 //--------------------------------------------------
 VxInt32 DHDECL DxMono8ImgProcess(void *pInputBuf,
@@ -574,7 +574,3 @@ VxInt32 DHDECL DxMono8ImgProcess(void *pInputBuf,
 #endif
 
 #endif
-
-
-
-

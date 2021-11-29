@@ -289,10 +289,10 @@ VxInt32 DHDECL DxGetWhiteBalanceRatio(void* pInputBuffer, VxUint32 nWidth, VxUin
 
 //-----------------------------------------------------
 /**
+
 \brief  Auto raw defective pixel correct,Support image from Raw8 to Raw16, the bit number is actual bit number, when it
 is more than 8, the actual bit can be every number between 9 to 16. And if image format is packed, you need convert it
 to Raw16.This function should be used in each frame.
-
 \param  pRawImgBuf      [in,out]Raw image buffer
 \param  nWidth        	[in]image width
 \param  nHeight       	[in]image height

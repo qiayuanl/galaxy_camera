@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
         dynamic_reconfigure
         image_transport
         camera_info_manager
+        rm_msgs
         )
 
 generate_dynamic_reconfigure_options(
@@ -25,8 +26,7 @@ catkin_package(
 include_directories(
         ${catkin_INCLUDE_DIRS}
         ${OpenCV_INCLUDE_DIRS}
-        include/
-        ./
+        include
 )
 
 

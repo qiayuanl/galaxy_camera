@@ -19,14 +19,15 @@ generate_dynamic_reconfigure_options(
 
 catkin_package(
         LIBRARIES galaxy_camera
-        CATKIN_DEPENDS nodelet roscpp dynamic_reconfigure message_runtime
+        CATKIN_DEPENDS nodelet roscpp dynamic_reconfigure
         image_transport camera_info_manager
 )
 
 include_directories(
         ${catkin_INCLUDE_DIRS}
         ${OpenCV_INCLUDE_DIRS}
-        include
+        include/
+        ./
 )
 
 

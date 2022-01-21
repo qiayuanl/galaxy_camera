@@ -29,7 +29,7 @@ void GalaxyCameraNodelet::onInit()
   nh_.param("pixel_format", pixel_format_, std::string("bgr8"));
   nh_.param("frame_id", frame_id_, std::string("camera_optical_frame"));
   nh_.param("camera_sn", camera_sn_, std::string(""));
-  nh_.param("is_trigger", is_trigger_, true);
+  nh_.param("enable_imu_trigger", enable_imu_trigger_, true);
   nh_.param("raising_filter_value", raising_filter_value_, 2000);
   info_manager_.reset(new camera_info_manager::CameraInfoManager(nh_, camera_name_, camera_info_url_));
 
@@ -100,19 +100,19 @@ void GalaxyCameraNodelet::onInit()
   assert(GXSetInt(dev_handle_, GX_INT_OFFSET_Y, image_offset_y_) == GX_STATUS_SUCCESS);
   assert(GXSetEnum(dev_handle_, GX_ENUM_BALANCE_WHITE_AUTO, GX_BALANCE_WHITE_AUTO_CONTINUOUS) == GX_STATUS_SUCCESS);
 
-  if (is_trigger_)
+  if (enable_imu_trigger_)
   {
     assert(GXSetEnum(dev_handle_, GX_ENUM_TRIGGER_MODE, GX_TRIGGER_MODE_ON) == GX_STATUS_SUCCESS);
-    assert(GXSetEnum(dev_handle_, GX_ENUM_TRIGGER_SOURCE, GX_TRIGGER_SOURCE_LINE2) == GX_STATUS_SUCCESS);
+    assert(GXSetEnum(dev_handle_, GX_ENUM_TRIGGER_SOURCE, GX_TRIGGER_SOURCE_LINE3) == GX_STATUS_SUCCESS);
     assert(GXSetEnum(dev_handle_, GX_ENUM_TRIGGER_ACTIVATION, GX_TRIGGER_ACTIVATION_RISINGEDGE) == GX_STATUS_SUCCESS);
     assert(GXSetFloat(dev_handle_, GX_FLOAT_TRIGGER_FILTER_RAISING, raising_filter_value_) == GX_STATUS_SUCCESS);
-    assert(GXSetEnum(dev_handle_, GX_ENUM_LINE_SELECTOR, GX_ENUM_LINE_SELECTOR_LINE2) == GX_STATUS_SUCCESS);
+    assert(GXSetEnum(dev_handle_, GX_ENUM_LINE_SELECTOR, GX_ENUM_LINE_SELECTOR_LINE3) == GX_STATUS_SUCCESS);
     assert(GXSetEnum(dev_handle_, GX_ENUM_LINE_MODE, GX_ENUM_LINE_MODE_INPUT) == GX_STATUS_SUCCESS);
 
     trigger_sub_ = nh_.subscribe("/trigger_time", 50, &galaxy_camera::GalaxyCameraNodelet::triggerCB, this);
 
-    imu_correspondence_service_ =
-        nh_.advertiseService("imu_camera_correspondece", galaxy_camera::GalaxyCameraNodelet::imuCorrespondence);
+    //    imu_correspondence_service_ =
+    //        nh_.advertiseService("imu_camera_correspondece", galaxy_camera::GalaxyCameraNodelet::imuCorrespondence);
   }
   else
   {
@@ -124,10 +124,7 @@ void GalaxyCameraNodelet::onInit()
   if (GXStreamOn(dev_handle_) == GX_STATUS_SUCCESS)
   {
     ROS_INFO("Stream On.");
-    if (is_trigger_)
-    {
-      device_open_ = true;
-    }
+    device_open_ = true;
   }
 
   ros::NodeHandle p_nh(nh_, "galaxy_camera_dy");
@@ -137,44 +134,38 @@ void GalaxyCameraNodelet::onInit()
   srv_->setCallback(cb);
 }
 
-bool GalaxyCameraNodelet::imuCorrespondence(rm_msgs::CameraStatus::Request& req, rm_msgs::CameraStatus::Response& res)
-{
-  res.is_open = device_open_;
-  return true;
-}
+// bool GalaxyCameraNodelet::imuCorrespondence(rm_msgs::CameraStatus::Request&
+// req, rm_msgs::CameraStatus::Response& res)
+//{
+//   res.is_open = device_open_;
+//   return true;
+// }
 
 void GalaxyCameraNodelet::triggerCB(const sensor_msgs::TimeReference::ConstPtr& time_ref)
 {
   galaxy_camera::TriggerPacket pkt;
-  pkt.trigger_time_ = time_ref->header.stamp;
+  pkt.trigger_time_ = time_ref->time_ref;
   pkt.trigger_counter_ = time_ref->header.seq;
   fifoWrite(pkt);
 }
 
 void GalaxyCameraNodelet::fifoWrite(TriggerPacket pkt)
 {
-  fifo_[fifo_write_num_] = pkt;
-  fifo_write_num_ = (fifo_write_num_ + 1) % FIFO_SIZE;
-  if (fifo_write_num_ == fifo_read_num_)
+  if (fifo_front_ == (fifo_rear_ + 1) % FIFO_SIZE)
   {
     ROS_WARN("FIFO overflow!");
+    return;
   }
+  fifo_[fifo_rear_] = pkt;
+  fifo_rear_ = (fifo_rear_ + 1) % FIFO_SIZE;
 }
 
 bool GalaxyCameraNodelet::fifoRead(TriggerPacket& pkt)
 {
-  if (fifo_read_num_ == fifo_write_num_)
+  if (fifo_front_ == fifo_rear_)
     return false;
-  pkt = fifo_[fifo_read_num_];
-  fifo_read_num_ = (fifo_read_num_ + 1) % FIFO_SIZE;
-  return true;
-}
-
-bool GalaxyCameraNodelet::fifoLook(TriggerPacket& pkt)
-{
-  if (fifo_read_num_ == fifo_write_num_)
-    return false;
-  pkt = fifo_[fifo_read_num_];
+  pkt = fifo_[fifo_front_];
+  fifo_front_ = (fifo_front_ + 1) % FIFO_SIZE;
   return true;
 }
 
@@ -182,37 +173,22 @@ void GalaxyCameraNodelet::onFrameCB(GX_FRAME_CALLBACK_PARAM* pFrame)
 {
   if (pFrame->status == GX_FRAME_STATUS_SUCCESS)
   {
-    float delay_time;
-    if (is_trigger_)
+    if (enable_imu_trigger_)
     {
       TriggerPacket pkt;
-      while (!fifoLook(pkt))
+      while (!fifoRead(pkt))
       {
         ros::Duration(0.001).sleep();
       }
-      if (pkt.trigger_counter_ == 0)
-        next_trigger_counter_ = 0;
-      if (pkt.trigger_counter_ == next_trigger_counter_)
-      {
-        fifoRead(pkt);
-        double exposure_value;
-        GXGetFloat(dev_handle_, GX_FLOAT_EXPOSURE_TIME, &exposure_value);
-        const auto expose_duration = ros::Duration(exposure_value * 1e-6 / 2);
-        //        delay_time = (pkt.trigger_time_.sec + pkt.trigger_time_.nsec * 1e-9) -
-        //                     (image_.header.stamp.sec + image_.header.stamp.nsec * 1e-9);
-        image_.header.stamp = pkt.trigger_time_ + ros::Duration(exposure_value * 1e-6 / 2);
-        info_.header.stamp = pkt.trigger_time_ + ros::Duration(exposure_value * 1e-6 / 2);
-      }
+      if (pkt.trigger_counter_ != receive_trigger_counter_++)
+        ROS_WARN("Trigger not in sync!");
       else
       {
-        out_of_counter_++;
-        if ((out_of_counter_ % 100) == 0)
-        {
-          ROS_WARN("trigger not in sync (%d)!", out_of_counter_);
-        }
+        image_.header.stamp = pkt.trigger_time_;
+        info_.header.stamp = pkt.trigger_time_;
       }
-      next_trigger_counter_++;
-      ROS_INFO("%d", pkt.trigger_counter_);
+      ROS_INFO("trigger_counter:%d,receive_trigger_counter:%d,fifo_length:%d,front:%d,rear:%d", pkt.trigger_counter_,
+               receive_trigger_counter_, (fifo_rear_ - fifo_front_ + FIFO_SIZE) % FIFO_SIZE, fifo_front_, fifo_rear_);
     }
     else
     {
@@ -316,11 +292,10 @@ char* GalaxyCameraNodelet::img_;
 sensor_msgs::Image GalaxyCameraNodelet::image_;
 image_transport::CameraPublisher GalaxyCameraNodelet::pub_;
 sensor_msgs::CameraInfo GalaxyCameraNodelet::info_;
-bool GalaxyCameraNodelet::is_trigger_;
+bool GalaxyCameraNodelet::enable_imu_trigger_;
 struct TriggerPacket GalaxyCameraNodelet::fifo_[FIFO_SIZE];
-uint32_t GalaxyCameraNodelet::next_trigger_counter_;
-int GalaxyCameraNodelet::fifo_read_num_;
-int GalaxyCameraNodelet::fifo_write_num_;
-int GalaxyCameraNodelet::out_of_counter_;
+uint32_t GalaxyCameraNodelet::receive_trigger_counter_ = 0;
+int GalaxyCameraNodelet::fifo_front_ = 0;
+int GalaxyCameraNodelet::fifo_rear_ = 0;
 
 }  // namespace galaxy_camera

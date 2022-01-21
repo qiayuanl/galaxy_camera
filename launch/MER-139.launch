@@ -1,5 +1,7 @@
 
 <launch>
+    <remap from="trigger_time" to="controllers/imu_filter_controller/gimbal_imu/trigger_time"/>
+
     <node pkg="nodelet" type="nodelet" name="standalone_nodelet" args="manager"
           output="screen"/>
     <node pkg="nodelet" type="nodelet" name="galaxy_camera"
@@ -11,8 +13,8 @@
         <param name="camera_info_url" value=""/>
         <param name="camera_frame_id" value="camera"/>
         <param name="camera_sn" value="KE0200060392"/>
-        <param name="is_trigger" value="false"/>
-        <param name="raising_filter_value" value="20"/>
+        <param name="enable_imu_trigger" value="true"/>
+        <param name="raising_filter_value" value="0"/>
     </node>
 
     <node ns="galaxy_camera" name="image_proc" pkg="image_proc"

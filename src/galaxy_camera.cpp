@@ -187,8 +187,6 @@ void GalaxyCameraNodelet::onFrameCB(GX_FRAME_CALLBACK_PARAM* pFrame)
         image_.header.stamp = pkt.trigger_time_;
         info_.header.stamp = pkt.trigger_time_;
       }
-      ROS_INFO("trigger_counter:%d,receive_trigger_counter:%d,fifo_length:%d,front:%d,rear:%d", pkt.trigger_counter_,
-               receive_trigger_counter_, (fifo_rear_ - fifo_front_ + FIFO_SIZE) % FIFO_SIZE, fifo_front_, fifo_rear_);
     }
     else
     {

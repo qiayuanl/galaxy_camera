@@ -111,8 +111,8 @@ void GalaxyCameraNodelet::onInit()
 
     trigger_sub_ = nh_.subscribe("/trigger_time", 50, &galaxy_camera::GalaxyCameraNodelet::triggerCB, this);
 
-    //    imu_correspondence_service_ =
-    //        nh_.advertiseService("imu_camera_correspondece", galaxy_camera::GalaxyCameraNodelet::imuCorrespondence);
+    imu_correspondence_service_ =
+        nh_.advertiseService("imu_camera_correspondece", galaxy_camera::GalaxyCameraNodelet::imuCorrespondence);
   }
   else
   {
@@ -134,12 +134,11 @@ void GalaxyCameraNodelet::onInit()
   srv_->setCallback(cb);
 }
 
-// bool GalaxyCameraNodelet::imuCorrespondence(rm_msgs::CameraStatus::Request&
-// req, rm_msgs::CameraStatus::Response& res)
-//{
-//   res.is_open = device_open_;
-//   return true;
-// }
+bool GalaxyCameraNodelet::imuCorrespondence(rm_msgs::CameraStatus::Request& req, rm_msgs::CameraStatus::Response& res)
+{
+  res.is_open = device_open_;
+  return true;
+}
 
 void GalaxyCameraNodelet::triggerCB(const sensor_msgs::TimeReference::ConstPtr& time_ref)
 {
@@ -198,8 +197,11 @@ void GalaxyCameraNodelet::onFrameCB(GX_FRAME_CALLBACK_PARAM* pFrame)
     DxRaw8toRGB24((void*)pFrame->pImgBuf, img_, pFrame->nWidth, pFrame->nHeight, RAW2RGB_NEIGHBOUR, BAYERBG, false);
     memcpy((char*)(&image_.data[0]), img_, image_.step * image_.height);
     pub_.publish(image_, info_);
-    //    ROS_INFO("%f", delay_time);
   }
+  else if (pFrame->status == GX_FRAME_STATUS_INCOMPLETE)
+    ROS_ERROR("Frame status incomplete");
+  else if (pFrame->status == GX_FRAME_STATUS_INVALID_IMAGE_INFO)
+    ROS_ERROR("Frame status invalid");
 }
 
 void GalaxyCameraNodelet::reconfigCB(CameraConfig& config, uint32_t level)

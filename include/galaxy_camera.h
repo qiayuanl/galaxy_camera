@@ -17,7 +17,6 @@
 
 namespace galaxy_camera
 {
-#define FIFO_SIZE 1023
 
 struct TriggerPacket
 {
@@ -56,7 +55,8 @@ private:
   ros::ServiceServer imu_correspondence_service_;
 
   ros::Subscriber trigger_sub_;
-  static TriggerPacket fifo_[FIFO_SIZE];
+  static const int FIFO_SIZE;
+  static TriggerPacket fifo_[];
   static uint32_t receive_trigger_counter_;
   static int fifo_front_;
   static int fifo_rear_;

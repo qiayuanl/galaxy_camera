@@ -293,9 +293,10 @@ sensor_msgs::Image GalaxyCameraNodelet::image_;
 image_transport::CameraPublisher GalaxyCameraNodelet::pub_;
 sensor_msgs::CameraInfo GalaxyCameraNodelet::info_;
 bool GalaxyCameraNodelet::enable_imu_trigger_;
-struct TriggerPacket GalaxyCameraNodelet::fifo_[FIFO_SIZE];
-uint32_t GalaxyCameraNodelet::receive_trigger_counter_ = 0;
+const int GalaxyCameraNodelet::FIFO_SIZE = 1023;
 int GalaxyCameraNodelet::fifo_front_ = 0;
 int GalaxyCameraNodelet::fifo_rear_ = 0;
+struct TriggerPacket GalaxyCameraNodelet::fifo_[FIFO_SIZE];
+uint32_t GalaxyCameraNodelet::receive_trigger_counter_ = 0;
 
 }  // namespace galaxy_camera

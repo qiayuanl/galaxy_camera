@@ -17,7 +17,6 @@
 
 namespace galaxy_camera
 {
-
 struct TriggerPacket
 {
   uint32_t trigger_counter_;

@@ -30,7 +30,7 @@ void GalaxyCameraNodelet::onInit()
   nh_.param("frame_id", frame_id_, std::string("camera_optical_frame"));
   nh_.param("camera_sn", camera_sn_, std::string(""));
   nh_.param("enable_imu_trigger", enable_imu_trigger_, true);
-  nh_.param("raising_filter_value", raising_filter_value_, 2000);
+  nh_.param("raising_filter_value", raising_filter_value_, 0);
   info_manager_.reset(new camera_info_manager::CameraInfoManager(nh_, camera_name_, camera_info_url_));
 
   // check for default camera info

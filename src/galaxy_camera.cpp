@@ -110,9 +110,6 @@ void GalaxyCameraNodelet::onInit()
     assert(GXSetEnum(dev_handle_, GX_ENUM_LINE_MODE, GX_ENUM_LINE_MODE_INPUT) == GX_STATUS_SUCCESS);
 
     trigger_sub_ = nh_.subscribe("/trigger_time", 50, &galaxy_camera::GalaxyCameraNodelet::triggerCB, this);
-
-    imu_correspondence_service_ =
-        nh_.advertiseService("imu_camera_correspondece", galaxy_camera::GalaxyCameraNodelet::imuCorrespondence);
   }
   else
   {
@@ -124,7 +121,6 @@ void GalaxyCameraNodelet::onInit()
   if (GXStreamOn(dev_handle_) == GX_STATUS_SUCCESS)
   {
     ROS_INFO("Stream On.");
-    device_open_ = true;
   }
 
   ros::NodeHandle p_nh(nh_, "galaxy_camera_dy");
@@ -132,12 +128,6 @@ void GalaxyCameraNodelet::onInit()
   dynamic_reconfigure::Server<CameraConfig>::CallbackType cb =
       boost::bind(&GalaxyCameraNodelet::reconfigCB, this, _1, _2);
   srv_->setCallback(cb);
-}
-
-bool GalaxyCameraNodelet::imuCorrespondence(rm_msgs::CameraStatus::Request& req, rm_msgs::CameraStatus::Response& res)
-{
-  res.is_open = device_open_;
-  return true;
 }
 
 void GalaxyCameraNodelet::triggerCB(const sensor_msgs::TimeReference::ConstPtr& time_ref)
@@ -286,7 +276,6 @@ GalaxyCameraNodelet::~GalaxyCameraNodelet()
   GXCloseLib();
 }
 
-bool GalaxyCameraNodelet::device_open_ = false;
 GX_DEV_HANDLE GalaxyCameraNodelet::dev_handle_;
 char* GalaxyCameraNodelet::img_;
 sensor_msgs::Image GalaxyCameraNodelet::image_;

@@ -13,7 +13,6 @@
 #include <camera_info_manager/camera_info_manager.h>
 #include <dynamic_reconfigure/client.h>
 #include <sensor_msgs/TimeReference.h>
-#include <rm_msgs/CameraStatus.h>
 
 namespace galaxy_camera
 {
@@ -48,10 +47,6 @@ private:
   static image_transport::CameraPublisher pub_;
   static sensor_msgs::CameraInfo info_;
   static void GX_STDC onFrameCB(GX_FRAME_CALLBACK_PARAM* pFrame);
-
-  static bool device_open_;
-  static bool imuCorrespondence(rm_msgs::CameraStatus::Request& req, rm_msgs::CameraStatus::Response& res);
-  ros::ServiceServer imu_correspondence_service_;
 
   ros::Subscriber trigger_sub_;
   static const int FIFO_SIZE;

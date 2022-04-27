@@ -21,6 +21,7 @@ void GalaxyCameraNodelet::onInit()
 
   nh_.param("camera_frame_id", image_.header.frame_id, std::string("camera_optical_frame"));
   nh_.param("camera_name", camera_name_, std::string("camera"));
+  nh_.param("imu_name", imu_name_, std::string("gimbal_imu"));
   nh_.param("camera_info_url", camera_info_url_, std::string(""));
   nh_.param("image_width", image_width_, 1280);
   nh_.param("image_height", image_height_, 1024);
@@ -128,6 +129,23 @@ void GalaxyCameraNodelet::onInit()
   dynamic_reconfigure::Server<CameraConfig>::CallbackType cb =
       boost::bind(&GalaxyCameraNodelet::reconfigCB, this, _1, _2);
   srv_->setCallback(cb);
+
+  if (enable_imu_trigger_)
+  {
+    imu_trigger_client_ = ros::NodeHandle("rm_hw").serviceClient<rm_msgs::EnableImuTrigger>("enable_imu_trigger");
+    rm_msgs::EnableImuTrigger imu_trigger_srv;
+    imu_trigger_srv.request.imu_name = imu_name_;
+    imu_trigger_srv.request.enable_trigger = true;
+    while (!imu_trigger_client_.call(imu_trigger_srv))
+    {
+      ROS_WARN("Failed to call service enable_imu_trigger. Retry now.");
+      ros::Duration(1).sleep();
+    }
+    if (imu_trigger_srv.response.is_success)
+      ROS_INFO("Enable imu %s trigger camera successfully", imu_name_.c_str());
+    else
+      ROS_ERROR("Failed to enable imu %s trigger camera", imu_name_.c_str());
+  }
 }
 
 void GalaxyCameraNodelet::triggerCB(const sensor_msgs::TimeReference::ConstPtr& time_ref)

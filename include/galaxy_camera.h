@@ -13,6 +13,7 @@
 #include <camera_info_manager/camera_info_manager.h>
 #include <dynamic_reconfigure/client.h>
 #include <sensor_msgs/TimeReference.h>
+#include <rm_msgs/EnableImuTrigger.h>
 
 namespace galaxy_camera
 {
@@ -37,10 +38,12 @@ private:
   ros::NodeHandle nh_;
   static GX_DEV_HANDLE dev_handle_;
   dynamic_reconfigure::Server<CameraConfig>* srv_{};
+  ros::ServiceClient imu_trigger_client_;
   int last_channel_ = 0;
 
   boost::shared_ptr<camera_info_manager::CameraInfoManager> info_manager_;
   std::string camera_name_, camera_info_url_, pixel_format_, frame_id_, camera_sn_;
+  std::string imu_name_;
   int image_width_{}, image_height_{}, image_offset_x_{}, image_offset_y_{}, raising_filter_value_{};
   static bool enable_imu_trigger_;
   static char* img_;

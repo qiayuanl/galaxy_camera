@@ -34,17 +34,20 @@ public:
 private:
   void reconfigCB(CameraConfig& config, uint32_t level);
   void triggerCB(const sensor_msgs::TimeReference::ConstPtr& time_ref);
+  void enableTriggerCB(const ros::TimerEvent&);
 
   ros::NodeHandle nh_;
   static GX_DEV_HANDLE dev_handle_;
   dynamic_reconfigure::Server<CameraConfig>* srv_{};
-  ros::ServiceClient imu_trigger_client_;
+  static ros::ServiceClient imu_trigger_client_;
   int last_channel_ = 0;
 
   boost::shared_ptr<camera_info_manager::CameraInfoManager> info_manager_;
   std::string camera_name_, camera_info_url_, pixel_format_, frame_id_, camera_sn_;
-  std::string imu_name_;
+  static std::string imu_name_;
   int image_width_{}, image_height_{}, image_offset_x_{}, image_offset_y_{}, raising_filter_value_{};
+  ros::Timer enable_trigger_timer_;
+  ros::Time last_trigger_time_;
   static bool enable_imu_trigger_;
   static char* img_;
   static image_transport::CameraPublisher pub_;
@@ -52,6 +55,7 @@ private:
   static void GX_STDC onFrameCB(GX_FRAME_CALLBACK_PARAM* pFrame);
 
   ros::Subscriber trigger_sub_;
+  static bool trigger_not_sync_;
   static const int FIFO_SIZE;
   static TriggerPacket fifo_[];
   static uint32_t receive_trigger_counter_;

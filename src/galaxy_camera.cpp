@@ -16,8 +16,6 @@ GalaxyCameraNodelet::GalaxyCameraNodelet()
 void GalaxyCameraNodelet::onInit()
 {
   nh_ = this->getPrivateNodeHandle();
-  image_transport::ImageTransport it(nh_);
-  pub_ = it.advertiseCamera("image_raw", 1);
 
   nh_.param("camera_frame_id", image_.header.frame_id, std::string("camera_optical_frame"));
   nh_.param("camera_name", camera_name_, std::string("camera"));
@@ -34,6 +32,8 @@ void GalaxyCameraNodelet::onInit()
   nh_.param("raising_filter_value", raising_filter_value_, 0);
   info_manager_.reset(new camera_info_manager::CameraInfoManager(nh_, camera_name_, camera_info_url_));
 
+  image_transport::ImageTransport it(nh_);
+  pub_ = it.advertiseCamera("/galaxy_camera/" + nh_.getNamespace() + "/image_raw", 1);
   // check for default camera info
   if (!info_manager_->isCalibrated())
   {
@@ -64,7 +64,7 @@ void GalaxyCameraNodelet::onInit()
   // Opens the device.
   if (device_num > 1)
   {
-    assert(nh_.hasParam("camera_SN"));
+    assert(!camera_sn_.empty());
     open_param.accessMode = GX_ACCESS_EXCLUSIVE;
     open_param.openMode = GX_OPEN_SN;
     open_param.pszContent = (char*)&camera_sn_[0];
@@ -124,7 +124,7 @@ void GalaxyCameraNodelet::onInit()
     ROS_INFO("Stream On.");
   }
 
-  ros::NodeHandle p_nh(nh_, "galaxy_camera_dy");
+  ros::NodeHandle p_nh("/galaxy_camera" + nh_.getNamespace() + "/galaxy_camera_dy");
   srv_ = new dynamic_reconfigure::Server<CameraConfig>(p_nh);
   dynamic_reconfigure::Server<CameraConfig>::CallbackType cb =
       boost::bind(&GalaxyCameraNodelet::reconfigCB, this, _1, _2);

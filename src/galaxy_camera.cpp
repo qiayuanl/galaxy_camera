@@ -21,6 +21,7 @@ void GalaxyCameraNodelet::onInit()
 
   nh_.param("camera_frame_id", image_.header.frame_id, std::string("camera_optical_frame"));
   nh_.param("camera_name", camera_name_, std::string("camera"));
+  nh_.param("imu_name", imu_name_, std::string("gimbal_imu"));
   nh_.param("camera_info_url", camera_info_url_, std::string(""));
   nh_.param("image_width", image_width_, 1280);
   nh_.param("image_height", image_height_, 1024);
@@ -110,9 +111,6 @@ void GalaxyCameraNodelet::onInit()
     assert(GXSetEnum(dev_handle_, GX_ENUM_LINE_MODE, GX_ENUM_LINE_MODE_INPUT) == GX_STATUS_SUCCESS);
 
     trigger_sub_ = nh_.subscribe("/trigger_time", 50, &galaxy_camera::GalaxyCameraNodelet::triggerCB, this);
-
-    imu_correspondence_service_ =
-        nh_.advertiseService("imu_camera_correspondece", galaxy_camera::GalaxyCameraNodelet::imuCorrespondence);
   }
   else
   {
@@ -124,7 +122,6 @@ void GalaxyCameraNodelet::onInit()
   if (GXStreamOn(dev_handle_) == GX_STATUS_SUCCESS)
   {
     ROS_INFO("Stream On.");
-    device_open_ = true;
   }
 
   ros::NodeHandle p_nh(nh_, "galaxy_camera_dy");
@@ -132,16 +129,43 @@ void GalaxyCameraNodelet::onInit()
   dynamic_reconfigure::Server<CameraConfig>::CallbackType cb =
       boost::bind(&GalaxyCameraNodelet::reconfigCB, this, _1, _2);
   srv_->setCallback(cb);
+
+  if (enable_imu_trigger_)
+  {
+    imu_trigger_client_ = ros::NodeHandle("rm_hw").serviceClient<rm_msgs::EnableImuTrigger>("enable_imu_trigger");
+    rm_msgs::EnableImuTrigger imu_trigger_srv;
+    imu_trigger_srv.request.imu_name = imu_name_;
+    imu_trigger_srv.request.enable_trigger = true;
+    while (!imu_trigger_client_.call(imu_trigger_srv))
+    {
+      ROS_WARN("Failed to call service enable_imu_trigger. Retry now.");
+      ros::Duration(1).sleep();
+    }
+    if (imu_trigger_srv.response.is_success)
+      ROS_INFO("Enable imu %s trigger camera successfully", imu_name_.c_str());
+    else
+      ROS_ERROR("Failed to enable imu %s trigger camera", imu_name_.c_str());
+    enable_trigger_timer_ = nh_.createTimer(ros::Duration(0.5), &GalaxyCameraNodelet::enableTriggerCB, this);
+  }
 }
 
-bool GalaxyCameraNodelet::imuCorrespondence(rm_msgs::CameraStatus::Request& req, rm_msgs::CameraStatus::Response& res)
+void GalaxyCameraNodelet::enableTriggerCB(const ros::TimerEvent&)
 {
-  res.is_open = device_open_;
-  return true;
+  if ((ros::Time::now() - last_trigger_time_).toSec() > 1.0)
+  {
+    ROS_INFO("Try to enable imu %s to trigger camera.", imu_name_.c_str());
+    rm_msgs::EnableImuTrigger imu_trigger_srv;
+    imu_trigger_srv.request.imu_name = imu_name_;
+    imu_trigger_srv.request.enable_trigger = true;
+    imu_trigger_client_.call(imu_trigger_srv);
+    if (trigger_not_sync_)
+      trigger_not_sync_ = false;
+  }
 }
 
 void GalaxyCameraNodelet::triggerCB(const sensor_msgs::TimeReference::ConstPtr& time_ref)
 {
+  last_trigger_time_ = time_ref->time_ref;
   galaxy_camera::TriggerPacket pkt;
   pkt.trigger_time_ = time_ref->time_ref;
   pkt.trigger_counter_ = time_ref->header.seq;
@@ -172,25 +196,51 @@ void GalaxyCameraNodelet::onFrameCB(GX_FRAME_CALLBACK_PARAM* pFrame)
 {
   if (pFrame->status == GX_FRAME_STATUS_SUCCESS)
   {
+    ros::Time now = ros::Time::now();
     if (enable_imu_trigger_)
     {
-      TriggerPacket pkt;
-      while (!fifoRead(pkt))
+      if (!trigger_not_sync_)
       {
-        ros::Duration(0.001).sleep();
+        TriggerPacket pkt;
+        while (!fifoRead(pkt))
+        {
+          ros::Duration(0.001).sleep();
+        }
+        if (pkt.trigger_counter_ != receive_trigger_counter_++)
+        {
+          ROS_WARN("Trigger not in sync!");
+          trigger_not_sync_ = true;
+        }
+        else if ((now - pkt.trigger_time_).toSec() < 0)
+        {
+          ROS_WARN("Trigger not in sync! Maybe any CAN frames have be dropped?");
+          trigger_not_sync_ = true;
+        }
+        else if ((now - pkt.trigger_time_).toSec() > 0.06)
+        {
+          ROS_WARN("Trigger not in sync! Maybe imu %s does not actually trigger camera?", imu_name_.c_str());
+          trigger_not_sync_ = true;
+        }
+        else
+        {
+          image_.header.stamp = pkt.trigger_time_;
+          info_.header.stamp = pkt.trigger_time_;
+        }
       }
-      if (pkt.trigger_counter_ != receive_trigger_counter_++)
-        ROS_WARN("Trigger not in sync!");
-      else
+      if (trigger_not_sync_)
       {
-        image_.header.stamp = pkt.trigger_time_;
-        info_.header.stamp = pkt.trigger_time_;
+        fifo_front_ = fifo_rear_;
+        rm_msgs::EnableImuTrigger imu_trigger_srv;
+        imu_trigger_srv.request.imu_name = imu_name_;
+        imu_trigger_srv.request.enable_trigger = false;
+        imu_trigger_client_.call(imu_trigger_srv);
+        ROS_INFO("Disable imu %s from triggering camera.", imu_name_.c_str());
+        receive_trigger_counter_ = fifo_[fifo_rear_ - 1].trigger_counter_ + 1;
+        return;
       }
     }
     else
     {
-      ros::Time now = ros::Time::now();
-      //      delay_time = (now.sec + now.nsec * 1e-9) - (image_.header.stamp.sec + image_.header.stamp.nsec * 1e-9);
       image_.header.stamp = now;
       info_.header.stamp = now;
     }
@@ -286,13 +336,15 @@ GalaxyCameraNodelet::~GalaxyCameraNodelet()
   GXCloseLib();
 }
 
-bool GalaxyCameraNodelet::device_open_ = false;
 GX_DEV_HANDLE GalaxyCameraNodelet::dev_handle_;
 char* GalaxyCameraNodelet::img_;
 sensor_msgs::Image GalaxyCameraNodelet::image_;
 image_transport::CameraPublisher GalaxyCameraNodelet::pub_;
 sensor_msgs::CameraInfo GalaxyCameraNodelet::info_;
+ros::ServiceClient GalaxyCameraNodelet::imu_trigger_client_;
+std::string GalaxyCameraNodelet::imu_name_;
 bool GalaxyCameraNodelet::enable_imu_trigger_;
+bool GalaxyCameraNodelet::trigger_not_sync_ = false;
 const int GalaxyCameraNodelet::FIFO_SIZE = 1023;
 int GalaxyCameraNodelet::fifo_front_ = 0;
 int GalaxyCameraNodelet::fifo_rear_ = 0;

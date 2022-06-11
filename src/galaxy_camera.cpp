@@ -234,7 +234,7 @@ void GalaxyCameraNodelet::onFrameCB(GX_FRAME_CALLBACK_PARAM* pFrame)
         imu_trigger_srv.request.imu_name = imu_name_;
         imu_trigger_srv.request.enable_trigger = false;
         imu_trigger_client_.call(imu_trigger_srv);
-        ROS_INFO("Disable imu %s from triggering camera.",imu_name_.c_str());
+        ROS_INFO("Disable imu %s from triggering camera.", imu_name_.c_str());
         receive_trigger_counter_ = fifo_[fifo_rear_ - 1].trigger_counter_ + 1;
         return;
       }

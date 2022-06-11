@@ -43,6 +43,9 @@ private:
   boost::shared_ptr<camera_info_manager::CameraInfoManager> info_manager_;
   std::string camera_name_, camera_info_url_, pixel_format_, frame_id_, camera_sn_;
   int image_width_{}, image_height_{}, image_offset_x_{}, image_offset_y_{}, raising_filter_value_{};
+  float exposure_value_{};
+  bool exposure_auto_{};
+  bool exposure_initialized_flag_ = false;
   static bool enable_imu_trigger_;
   static char* img_;
   static image_transport::CameraPublisher pub_;

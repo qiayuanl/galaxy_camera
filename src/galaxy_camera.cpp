@@ -259,7 +259,7 @@ void GalaxyCameraNodelet::onFrameCB(GX_FRAME_CALLBACK_PARAM* pFrame)
 void GalaxyCameraNodelet::reconfigCB(CameraConfig& config, uint32_t level)
 {
   (void)level;
-  if(!exposure_initialized_flag_)
+  if (!exposure_initialized_flag_)
   {
     config.exposure_value = exposure_value_;
     config.exposure_auto = exposure_auto_;

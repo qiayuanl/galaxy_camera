@@ -30,6 +30,8 @@ void GalaxyCameraNodelet::onInit()
   nh_.param("camera_sn", camera_sn_, std::string(""));
   nh_.param("enable_imu_trigger", enable_imu_trigger_, true);
   nh_.param("raising_filter_value", raising_filter_value_, 0);
+  nh_.param("exposure_auto", exposure_auto_, true);
+  nh_.param("exposure_value", exposure_value_, std::float_t(2000.));
   info_manager_.reset(new camera_info_manager::CameraInfoManager(nh_, camera_name_, camera_info_url_));
 
   image_transport::ImageTransport it(nh_);
@@ -257,6 +259,12 @@ void GalaxyCameraNodelet::onFrameCB(GX_FRAME_CALLBACK_PARAM* pFrame)
 void GalaxyCameraNodelet::reconfigCB(CameraConfig& config, uint32_t level)
 {
   (void)level;
+  if(!exposure_initialized_flag_)
+  {
+    config.exposure_value = exposure_value_;
+    config.exposure_auto = exposure_auto_;
+    exposure_initialized_flag_ = true;
+  }
   // Exposure
   if (config.exposure_auto)
   {

@@ -19,6 +19,8 @@
         <param name="camera_sn" value="KE0200060392"/>
         <param name="enable_imu_trigger" value="$(arg enable_imu_trigger)"/>
         <param name="raising_filter_value" value="0"/>
+        <param name="exposure_value" value="2000."/>
+        <param name="exposure_auto" value="true"/>
     </node>
 
 </launch>

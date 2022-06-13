@@ -46,6 +46,9 @@ private:
   std::string camera_name_, camera_info_url_, pixel_format_, frame_id_, camera_sn_;
   static std::string imu_name_;
   int image_width_{}, image_height_{}, image_offset_x_{}, image_offset_y_{}, raising_filter_value_{};
+  float exposure_value_{};
+  bool exposure_auto_{};
+  bool exposure_initialized_flag_ = false;
   ros::Timer enable_trigger_timer_;
   ros::Time last_trigger_time_;
   static bool enable_imu_trigger_;

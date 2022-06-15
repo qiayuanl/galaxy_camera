@@ -30,6 +30,7 @@ void GalaxyCameraNodelet::onInit()
   nh_.param("camera_sn", camera_sn_, std::string(""));
   nh_.param("enable_imu_trigger", enable_imu_trigger_, true);
   nh_.param("raising_filter_value", raising_filter_value_, 0);
+  nh_.param("frame_rate", frame_rate_, 10.0);
   nh_.param("exposure_auto", exposure_auto_, true);
   nh_.param("exposure_value", exposure_value_, std::float_t(2000.));
   info_manager_.reset(new camera_info_manager::CameraInfoManager(nh_, camera_name_, camera_info_url_));
@@ -102,6 +103,8 @@ void GalaxyCameraNodelet::onInit()
   assert(GXSetInt(dev_handle_, GX_INT_OFFSET_X, image_offset_x_) == GX_STATUS_SUCCESS);
   assert(GXSetInt(dev_handle_, GX_INT_OFFSET_Y, image_offset_y_) == GX_STATUS_SUCCESS);
   assert(GXSetEnum(dev_handle_, GX_ENUM_BALANCE_WHITE_AUTO, GX_BALANCE_WHITE_AUTO_CONTINUOUS) == GX_STATUS_SUCCESS);
+  assert(GXSetEnum(dev_handle_,GX_ENUM_ACQUISITION_FRAME_RATE_MODE, GX_ENUM_COVER_FRAMESTORE_MODE_ON) == GX_STATUS_SUCCESS);
+  assert(GXSetFloat(dev_handle_,GX_FLOAT_ACQUISITION_FRAME_RATE,frame_rate_) ==GX_STATUS_SUCCESS);
 
   if (enable_imu_trigger_)
   {
@@ -247,6 +250,37 @@ void GalaxyCameraNodelet::onFrameCB(GX_FRAME_CALLBACK_PARAM* pFrame)
       info_.header.stamp = now;
     }
     DxRaw8toRGB24((void*)pFrame->pImgBuf, img_, pFrame->nWidth, pFrame->nHeight, RAW2RGB_NEIGHBOUR, BAYERBG, false);
+    assert(GXGetFloat(dev_handle_,GX_FLOAT_GAMMA_PARAM,&gamma_param_)==GX_STATUS_SUCCESS);
+
+    int nLutLength;
+    assert(DxGetGammatLut(gamma_param_, NULL, &nLutLength)==DX_OK);
+    float* pGammaLut = new float[nLutLength];
+    assert(DxGetGammatLut(gamma_param_,pGammaLut,&nLutLength)==DX_OK);
+
+    assert(GXGetInt(dev_handle_,GX_INT_CONTRAST_PARAM,&contrast_param_)==GX_STATUS_SUCCESS);
+    assert(DxGetContrastLut(contrast_param_,NULL,&nLutLength)==DX_OK);
+//      ROS_INFO("%d",nLutLength);
+    float* pContrastLut = new float[nLutLength];
+//      ROS_INFO("%p",pContrastLut);
+    assert(DxGetContrastLut(contrast_param_,pContrastLut,&nLutLength)==DX_OK);
+    switch (improve_mode_) {
+        case 0:
+            assert(DxImageImprovment(img_,img_,pFrame->nWidth,pFrame->nHeight,0,pContrastLut,pGammaLut)==DX_OK);
+            break;
+        case 1:
+            assert(DxImageImprovment(img_,img_,pFrame->nWidth,pFrame->nHeight,0,NULL,pGammaLut)==DX_OK);
+            break;
+        case 2:
+            assert(DxImageImprovment(img_,img_,pFrame->nWidth,pFrame->nHeight,0,pContrastLut,NULL)==DX_OK);
+            break;
+        case 3:
+            break;
+    }
+
+    if(pGammaLut!=NULL)
+        delete[] pGammaLut;
+    if(pContrastLut!=NULL)
+        delete[] pContrastLut;
     memcpy((char*)(&image_.data[0]), img_, image_.step * image_.height);
     pub_.publish(image_, info_);
   }
@@ -334,6 +368,8 @@ void GalaxyCameraNodelet::reconfigCB(CameraConfig& config, uint32_t level)
     GXSetEnum(dev_handle_, GX_ENUM_BALANCE_WHITE_AUTO, GX_BALANCE_WHITE_AUTO_OFF);
     GXSetFloat(dev_handle_, GX_FLOAT_BALANCE_RATIO, config.white_value);
   }
+  assert(GXGetFloat(dev_handle_,GX_FLOAT_GAMMA_PARAM,&config.gamma_param)==GX_STATUS_SUCCESS);
+  improve_mode_ = config.improve_mode;
 }
 
 GalaxyCameraNodelet::~GalaxyCameraNodelet()
@@ -358,5 +394,7 @@ int GalaxyCameraNodelet::fifo_front_ = 0;
 int GalaxyCameraNodelet::fifo_rear_ = 0;
 struct TriggerPacket GalaxyCameraNodelet::fifo_[FIFO_SIZE];
 uint32_t GalaxyCameraNodelet::receive_trigger_counter_ = 0;
-
+double GalaxyCameraNodelet::gamma_param_{};
+int64_t GalaxyCameraNodelet::contrast_param_{};
+int GalaxyCameraNodelet::improve_mode_ = 1;
 }  // namespace galaxy_camera

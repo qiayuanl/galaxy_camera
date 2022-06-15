@@ -46,6 +46,7 @@ private:
   std::string camera_name_, camera_info_url_, pixel_format_, frame_id_, camera_sn_;
   static std::string imu_name_;
   int image_width_{}, image_height_{}, image_offset_x_{}, image_offset_y_{}, raising_filter_value_{};
+  double frame_rate_;
   float exposure_value_{};
   bool exposure_auto_{};
   bool exposure_initialized_flag_ = false;
@@ -66,6 +67,9 @@ private:
   static int fifo_rear_;
   static void fifoWrite(TriggerPacket pkt);
   static bool fifoRead(TriggerPacket& pkt);
+  static double gamma_param_;
+  static int64_t contrast_param_;
+  static int improve_mode_;
 };
 }  // namespace galaxy_camera
 

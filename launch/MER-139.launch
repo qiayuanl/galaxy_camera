@@ -19,6 +19,7 @@
         <param name="camera_sn" value="KE0200060392"/>
         <param name="enable_imu_trigger" value="$(arg enable_imu_trigger)"/>
         <param name="raising_filter_value" value="0"/>
+        <param name="frame_rate" value="1000.0"/>
     </node>
 
 </launch>

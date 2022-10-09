@@ -30,7 +30,7 @@ void GalaxyCameraNodelet::onInit()
   nh_.param("camera_sn", camera_sn_, std::string(""));
   nh_.param("enable_imu_trigger", enable_imu_trigger_, true);
   nh_.param("raising_filter_value", raising_filter_value_, 0);
-  nh_.param("frame_rate", frame_rate_, 10.0);
+  nh_.param("frame_rate", frame_rate_, 210.0);
   nh_.param("exposure_auto", exposure_auto_, true);
   nh_.param("exposure_value", exposure_value_, std::float_t(2000.));
   info_manager_.reset(new camera_info_manager::CameraInfoManager(nh_, camera_name_, camera_info_url_));
@@ -109,6 +109,8 @@ void GalaxyCameraNodelet::onInit()
 
   if (enable_imu_trigger_)
   {
+    assert(GXSetEnum(dev_handle_, GX_ENUM_ACQUISITION_FRAME_RATE_MODE, GX_ACQUISITION_FRAME_RATE_MODE_OFF) ==
+           GX_STATUS_SUCCESS);
     assert(GXSetEnum(dev_handle_, GX_ENUM_TRIGGER_MODE, GX_TRIGGER_MODE_ON) == GX_STATUS_SUCCESS);
     assert(GXSetEnum(dev_handle_, GX_ENUM_TRIGGER_SOURCE, GX_TRIGGER_SOURCE_LINE3) == GX_STATUS_SUCCESS);
     assert(GXSetEnum(dev_handle_, GX_ENUM_TRIGGER_ACTIVATION, GX_TRIGGER_ACTIVATION_RISINGEDGE) == GX_STATUS_SUCCESS);
